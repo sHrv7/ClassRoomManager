@@ -1,11 +1,14 @@
 <?php
+/** Zajednicke funkcije za prikaz, CSRF, preusmjeravanje i provjeru pristupa. */
 declare(strict_types=1);
 
+/** Sigurno pretvara vrijednost u tekst prikladan za HTML prikaz. */
 function e(string|int|null $value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/** Vraca CSRF token sesije ili stvara novi kriptografski nasumican token. */
 function csrf_token(): string
 {
     if (!isset($_SESSION['csrf_token'])) {
@@ -15,18 +18,21 @@ function csrf_token(): string
     return $_SESSION['csrf_token'];
 }
 
+/** Provjerava odgovara li poslani CSRF token tokenu spremljenom u sesiji. */
 function csrf_is_valid(): bool
 {
     return isset($_SESSION['csrf_token'], $_POST['csrf_token'])
         && hash_equals($_SESSION['csrf_token'], (string) $_POST['csrf_token']);
 }
 
+/** Preusmjerava preglednik na zadanu lokaciju i prekida izvrsavanje. */
 function redirect(string $location): never
 {
     header('Location: ' . $location);
     exit;
 }
 
+/** Dohvaca prijavljenog korisnika i prekida sesiju ako je racun neaktivan. */
 function current_user(): ?array
 {
     if (!isset($_SESSION['user_email'])) {
@@ -48,6 +54,7 @@ function current_user(): ?array
     return $user;
 }
 
+/** Zahtijeva prijavljenog korisnika; inace ga preusmjerava na prijavu. */
 function require_login(): array
 {
     $user = current_user();
@@ -58,6 +65,7 @@ function require_login(): array
     return $user;
 }
 
+/** Zahtijeva prijavljenog administratora; ostalim korisnicima vraca 403. */
 function require_admin(): array
 {
     $user = require_login();
