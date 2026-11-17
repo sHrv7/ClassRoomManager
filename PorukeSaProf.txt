@@ -1,0 +1,47 @@
+projekt je zamišljen kao aplikacija koja fakultetu omogućuje jednostavno upravljanje učionicama i rezervacijama predavanja.
+Postojale bi tri glavne uloge: administrator, profesor i student.
+ 
+Administrator
+Pregledava, uređuje i otkazuje rezervacije.
+Briše učionice koje se više ne koriste.
+Uređuje podatke o učionicama, primjerice kapacitet i oznaku prostorije.
+Dodaje nove učionice.
+ 
+Profesor
+Pregledava i otkazuje vlastite rezervacije.
+Rezervira odgovarajuću slobodnu učionicu.
+Unosi očekivani broj studenata.
+Odabire predmet, datum i termin predavanja.
+Pregledava dostupne učionice.
+ 
+Student
+Vidi dodijeljenu učionicu i vrijeme održavanja predavanja.
+Filtrira raspored prema predmetu, datumu ili profesoru.
+Pregledava raspored predavanja putem aplikacije ili API-ja.
+
+
+
+
+
+
+Poštovani kolega,
+tema je prikladna za projekt i možete je razvijati u predloženom smjeru.
+Podjela na administratora, profesora i studenta ima smisla, a navedene funkcionalnosti predstavljaju dobru osnovu.
+
+Uz rezervacije učionica potrebno je uključiti i obavezne elemente iz uputa za projekt:
+Javni dio aplikacije i modul vijesti ili obavijesti, primjerice obavijesti o promjenama rasporeda i otkazivanju predavanja.
+Potrebni su popis i detalji obavijesti, kategorije, pretraživanje i straničenje.
+CMS za upravljanje obavijestima i kategorijama, uključujući uređivač obogaćenog teksta, slike te spremanje nacrta, objavljivanje, uređivanje i brisanje.
+Registracija, prijava, odjava, korisnički profil i promjena lozinke.
+Administrator mora upravljati korisnicima, njihovim ulogama te aktivacijom i deaktivacijom računa.
+Profesor može preuzeti ovlasti urednika za vlastite obavijesti, a student ovlasti osnovnog registriranog korisnika.
+Backend u PHP-u i relacijska baza podataka, uz ER dijagram, provjeru unosa i zaštitu pristupa prema ovlastima.
+Vlastiti REST API u JSON ili XML formatu.
+Sam dohvat rasporeda nije dovoljan: potrebno je omogućiti i propisane operacije nad obavijestima i dohvat kategorija, uz provjeru ovlasti za izmjene.
+Dio aplikacije mora stvarno koristiti taj API, a potrebno je demonstrirati i validaciju zahtjeva prema JSON Schemi ili XSD-u.
+Povezivanje s najmanje jednim vanjskim API-jem koji ima smislenu primjenu u projektu, uz obradu nedostupnosti servisa i neispravnih odgovora.
+Za samu rezervaciju učionica vodite računa o sprječavanju preklapanja termina i provjeri odgovara li kapacitet učionice očekivanom broju studenata.
+Profesor smije upravljati samo vlastitim rezervacijama, dok administrator može upravljati svima.
+Potrebno je također redovito pratiti razvoj kroz GitHub te pripremiti dokumentaciju, testne scenarije, seminarski rad i prezentaciju prema uputama.
+
+Pošaljite mi još naziv aplikacije, planirane tehnologije i prijedlog vanjskog API-ja s kratkim opisom njegove namjene.
