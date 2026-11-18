@@ -30,6 +30,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+
+// Get subscribed subjects
+$statement = db()->prepare("
+    SELECT s.id, s.name
+    FROM subjects s
+    JOIN user_subjects us ON us.subject_id = s.id
+    WHERE us.user_id = :user_id
+    ORDER BY s.name
+");
+$statement->execute(['user_id' => $user['ID'] ?? $user['id']]);
+$subscribedSubjects = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+// Get available subjects
+$statement = db()->prepare("
+    SELECT s.id, s.name
+    FROM subjects s
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM user_subjects us
+        WHERE us.subject_id = s.id
+        AND us.user_id = :user_id
+    )
+    ORDER BY s.name
+");
+$statement->execute(['user_id' => $user['ID'] ?? $user['id']]);
+$availableSubjects = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+// Handle subscription
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subject_action'])) {
+
+    if (!csrf_is_valid()) {
+        $error = 'Zahtjev je istekao. Osvježite stranicu.';
+    } else {
+        $subjectId = (int)($_POST['subject_id'] ?? 0);
+
+        if ($_POST['subject_action'] === 'subscribe') {
+            $stmt = db()->prepare("
+                INSERT IGNORE INTO user_subjects (user_id, subject_id)
+                SELECT :user_id, id
+                FROM subjects
+                WHERE id = :subject_id
+            ");
+            $stmt->execute([
+                'user_id' => $user['ID'] ?? $user['id'],
+                'subject_id' => $subjectId
+            ]);
+
+            $message = 'Uspješno ste se pretplatili na predmet.';
+        }
+
+        if ($_POST['subject_action'] === 'unsubscribe') {
+            $stmt = db()->prepare("
+                DELETE FROM user_subjects
+                WHERE user_id = :user_id AND subject_id = :subject_id
+            ");
+            $stmt->execute([
+                'user_id' => $user['ID'] ?? $user['id'],
+                'subject_id' => $subjectId
+            ]);
+
+            $message = 'Odjavili ste se s predmeta.';
+        }
+
+        // Refresh subject lists
+        redirect('profile.php');
+    }
+}
+
+
 $pageTitle = 'Moj profil';
 require __DIR__ . '/header.php';
 ?>
@@ -71,6 +140,72 @@ require __DIR__ . '/header.php';
             <input id="password_confirmation" name="password_confirmation" type="password" minlength="8" autocomplete="new-password" required>
             <button class="button button-primary" type="submit">Promijeni lozinku</button>
         </form>
+
+    <section class="profile-panel subject-panel">
+
+    <div class="panel-heading">
+        <span class="panel-icon" aria-hidden="true">03</span>
+        <h2>Moji predmeti</h2>
+    </div>
+
+    <p class="muted">
+        Pretplatite se na predmete kako biste primali njihove obavijesti.
+    </p>
+
+    <form method="POST" action="profile.php" class="subject-subscribe-form">
+
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="subject_action" value="subscribe">
+
+        <label for="subject_id">Odaberite predmet</label>
+
+        <select name="subject_id" id="subject_id" required>
+            <option value="">Odaberite predmet...</option>
+
+            <?php foreach ($availableSubjects as $subject): ?>
+                <option value="<?= (int)$subject['id'] ?>">
+                    <?= e($subject['name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+
+        <button class="button button-primary" type="submit">
+            Pretplati se
+        </button>
+
+    </form>
+
+    <div class="subscribed-subjects">
+        <h3>Moje pretplate</h3>
+
+        <?php if (empty($subscribedSubjects)): ?>
+
+            <p class="muted">Trenutno niste pretplaćeni ni na jedan predmet.</p>
+
+        <?php else: ?>
+
+            <?php foreach ($subscribedSubjects as $subject): ?>
+
+                <div class="subject-item">
+                    <span><?= e($subject['name']) ?></span>
+
+                    <form method="POST" action="profile.php">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                        <input type="hidden" name="subject_action" value="unsubscribe">
+                        <input type="hidden" name="subject_id" value="<?= (int)$subject['id'] ?>">
+
+                        <button type="submit" class="subject-remove" title="Odjavi se s predmeta" aria-label="Odjavi se s predmeta">
+                            &times;
+                        </button>
+                    </form>
+                </div>
+
+            <?php endforeach; ?>
+
+        <?php endif; ?>
+    </div>
+
+</section>
     </div>
 </section>
 <?php require __DIR__ . '/footer.php'; ?>

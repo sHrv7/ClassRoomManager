@@ -27,10 +27,19 @@ $previousWeek = (clone $weekDate)
 $nextWeek = (clone $weekDate)
     ->modify('+7 days')->format('Y-m-d');
 
-// Get subjects
-$subjects = db()->query(
-    "SELECT id, name FROM subjects ORDER BY name"
-)->fetchAll();
+// Get subjects the current user is subscribed to
+$userId = $user['id'] ?? $user['ID'];
+
+$stmt = db()->prepare("
+    SELECT s.id, s.name
+    FROM subjects s
+    INNER JOIN user_subjects us ON us.subject_id = s.id
+    WHERE us.user_id = :user_id
+    ORDER BY s.name
+");
+
+$stmt->execute(['user_id' => $userId]);
+$subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get professors
 $users = db()->query("
@@ -60,6 +69,11 @@ $sql = "
 
     WHERE r.starts_at < :week_end
     AND r.ends_at > :week_start
+    AND r.subject_id IN (
+        SELECT subject_id
+        FROM user_subjects
+        WHERE user_id = :user_id
+    )
 
     ORDER BY r.starts_at
 ";
@@ -68,7 +82,8 @@ $stmt = db()->prepare($sql);
 
 $stmt->execute([
     ':week_start' => $weekStart . ' 00:00:00',
-    ':week_end' => $weekEnd . ' 00:00:00'
+    ':week_end' => $weekEnd . ' 00:00:00',
+    ':user_id' => $userId
 ]);
 
 $reservations = $stmt->fetchAll();
@@ -300,6 +315,10 @@ require __DIR__ . '/header.php';
 
             </div>
 
+            <p id="noLecturesMessage" style="display: none; padding: 20px;">
+                Nema predavanja za odabrane filtere.
+            </p>
+
         </div>
 
 
@@ -332,7 +351,9 @@ require __DIR__ . '/header.php';
 
             <?php foreach ($reservations as $reservation): ?>
 
-                <article class="mobile-lecture">
+                <article class="mobile-lecture"
+                    data-subject="<?= e($reservation['subject_name']) ?>"
+                    data-professor="<?= e($reservation['professor_name']) ?>">
 
                     <div class="mobile-lecture-date">
 
@@ -435,6 +456,6 @@ require __DIR__ . '/header.php';
 </dialog>
 
 
-<script src="assets/script.js"></script>
+<script src="/ClassRoomManager/assets/script.js?v=3"></script>
 
 <?php require __DIR__ . '/footer.php'; ?>

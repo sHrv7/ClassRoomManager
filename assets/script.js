@@ -1,34 +1,66 @@
-
+// FILTERS
 const subjectFilter = document.getElementById("subjectFilter");
 const professorFilter = document.getElementById("professorFilter");
 
-const lectures = document.querySelectorAll(".lecture");
+const lectures = document.querySelectorAll(".timetable .lecture");
+const mobileLectures = document.querySelectorAll(".mobile-list .mobile-lecture");
 
-// FILTER LECTURES
+const countElement = document.querySelector(".schedule-footer .muted");
+const noLecturesMessage = document.getElementById("noLecturesMessage");
 
 function applyFilters() {
+    const selectedSubject = subjectFilter.value;
+    const selectedProfessor = professorFilter.value;
 
-    const subject = subjectFilter.value.toLowerCase();
-    const professor = professorFilter.value.toLowerCase();
+    let visibleCount = 0;
 
     lectures.forEach(lecture => {
-
         const matchesSubject =
-            !subject ||
-            lecture.dataset.subject.toLowerCase() === subject;
+            !selectedSubject || lecture.dataset.subject === selectedSubject;
 
         const matchesProfessor =
-            !professor ||
-            lecture.dataset.professor.toLowerCase() === professor;
+            !selectedProfessor || lecture.dataset.professor === selectedProfessor;
 
-        lecture.hidden = !(matchesSubject && matchesProfessor);
+        const visible = matchesSubject && matchesProfessor;
 
+        lecture.style.display = "none";
+
+        if (visible) {
+            lecture.style.display = "flex";
+            visibleCount++;
+        }
     });
 
+    mobileLectures.forEach(lecture => {
+        const matchesSubject =
+            !selectedSubject || lecture.dataset.subject === selectedSubject;
+
+        const matchesProfessor =
+            !selectedProfessor || lecture.dataset.professor === selectedProfessor;
+
+        lecture.toggleAttribute(
+            "hidden",
+            !(matchesSubject && matchesProfessor)
+        );
+    });
+
+    if (noLecturesMessage) {
+        noLecturesMessage.style.display =
+            visibleCount === 0 ? "block" : "none";
+    }
+
+    if (countElement) {
+        countElement.textContent =
+            visibleCount + " prikazanih predavanja";
+    }
 }
 
-subjectFilter.addEventListener("change", applyFilters);
-professorFilter.addEventListener("change", applyFilters);
+if (subjectFilter && professorFilter) {
+    subjectFilter.addEventListener("change", applyFilters);
+    professorFilter.addEventListener("change", applyFilters);
+
+    applyFilters();
+}
 
 
 // LECTURE DETAILS POPUP
@@ -43,7 +75,7 @@ if (dialog) {
                 dialogTime: lecture.dataset.start + " – " + lecture.dataset.end,
                 dialogRoom: lecture.dataset.room,
                 dialogProfessor: lecture.dataset.professorName,
-                dialogNotes: lecture.dataset.notes || "No additional notes"
+                dialogNotes: lecture.dataset.notes || "Nema dodatnih napomena"
             };
 
             for (const [id, value] of Object.entries(fields)) {
@@ -51,8 +83,6 @@ if (dialog) {
 
                 if (element) {
                     element.textContent = value || "";
-                } else {
-                    console.error(`Missing HTML element: #${id}`);
                 }
             }
 

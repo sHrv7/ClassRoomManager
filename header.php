@@ -17,6 +17,9 @@ $pageTitle = $pageTitle ?? APP_NAME;
     <?php if (($pageTitle ?? '') === 'My reservations'): ?>
         <link rel="stylesheet" href="assets/reservations.css">
     <?php endif; ?>
+    <?php if (($pageTitle ?? '') === 'Obavijesti'): ?>
+        <link rel="stylesheet" href="assets/notifications.css?v=1">
+    <?php endif; ?>
 </head>
 <body>
 <header class="site-header">
@@ -25,6 +28,7 @@ $pageTitle = $pageTitle ?? APP_NAME;
         <a href="index.php">Početna</a>
         <?php if ($user): ?>
             <a href="timetable.php">Raspored</a>
+            <a href="notifications.php">Obavjesti</a>
             <?php if ($user['Role'] === 'Profesor'): ?>
                 <a href="reservations.php">Moje rezervacije</a>
             <?php endif; ?>

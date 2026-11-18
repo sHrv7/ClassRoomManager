@@ -6,6 +6,7 @@ require_once __DIR__ . '/functions.php';
 require_login();
 
 $user = current_user();
+$userId = $user['id'] ?? $user['ID'];
 
 if (($user['Role'] ?? '') !== 'Profesor') {
     http_response_code(403);
@@ -22,27 +23,98 @@ function reservation_redirect(): void {
     redirect('reservations.php');
 }
 
-// Handle create, update and delete
+function create_reservation_notification(
+    PDO $pdo,
+    int $subjectId,
+    int $professorId,
+    string $title,
+    string $message
+): void {
+    $stmt = $pdo->prepare('
+        INSERT INTO notifications
+            (subject_id, professor_id, title, message)
+        VALUES
+            (:subject_id, :professor_id, :title, :message)
+    ');
+
+    $stmt->execute([
+        'subject_id' => $subjectId,
+        'professor_id' => $professorId,
+        'title' => $title,
+        'message' => $message
+    ]);
+}
+
+// Handle create, update and delete.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_is_valid($_POST['csrf_token'] ?? '')) {
         $error = 'Your session expired. Please try again.';
     } else {
         $action = $_POST['action'] ?? '';
 
+        // DELETE RESERVATION
         if ($action === 'delete') {
             $id = (int)($_POST['reservation_id'] ?? 0);
 
-            $stmt = $pdo->prepare(
-                'DELETE FROM reservations WHERE id = :id AND user_id = :user_id'
-            );
+            // Get reservation details before deleting.
+            $stmt = $pdo->prepare('
+                SELECT
+                    r.subject_id,
+                    r.starts_at,
+                    r.ends_at,
+                    c.room_code
+                FROM reservations r
+                JOIN classrooms c ON c.id = r.classroom_id
+                WHERE r.id = :id AND r.user_id = :user_id
+            ');
+
             $stmt->execute([
                 'id' => $id,
-                'user_id' => $user['id']
+                'user_id' => $userId
             ]);
+
+            $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($reservation) {
+                $stmt = $pdo->prepare('
+                    DELETE FROM reservations
+                    WHERE id = :id AND user_id = :user_id
+                ');
+
+                $stmt->execute([
+                    'id' => $id,
+                    'user_id' => $userId
+                ]);
+
+                $stmt = $pdo->prepare('
+                    SELECT name
+                    FROM subjects
+                    WHERE id = :subject_id
+                ');
+
+                $stmt->execute([
+                    'subject_id' => $reservation['subject_id']
+                ]);
+
+                $subjectName = $stmt->fetchColumn();
+
+                // Notify subscribers of the subject.
+                create_reservation_notification(
+                    $pdo,
+                    (int)$reservation['subject_id'],
+                    (int)$userId,
+                    'Predavanje otkazano',
+                    'Predavanje iz predmeta ' . $subjectName . ' u učionici ' . $reservation['room_code'] .
+                    ' na datum ' .
+                    date('d.m.Y H:i', strtotime($reservation['starts_at'])) .
+                    ' je otkazano.'
+                );
+            }
 
             reservation_redirect();
         }
 
+        // CREATE OR UPDATE RESERVATION
         if ($action === 'save') {
             $id = (int)($_POST['reservation_id'] ?? 0);
             $classroomId = (int)($_POST['classroom_id'] ?? 0);
@@ -53,16 +125,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$classroomId || !$subjectId || !$startsAt || !$endsAt) {
                 $error = 'Please complete all required fields.';
-            } elseif (strtotime($endsAt) <= strtotime($startsAt)) {
+            } elseif (
+                strtotime($startsAt) === false ||
+                strtotime($endsAt) === false ||
+                strtotime($endsAt) <= strtotime($startsAt)
+            ) {
                 $error = 'The end time must be later than the start time.';
             } else {
-                // Check that the selected classroom and subject exist.
+                // Check that the selected classroom exists.
                 $check = $pdo->prepare(
                     'SELECT COUNT(*) FROM classrooms WHERE id = ?'
                 );
                 $check->execute([$classroomId]);
                 $classroomExists = $check->fetchColumn();
 
+                // Check that the selected subject exists.
                 $check = $pdo->prepare(
                     'SELECT COUNT(*) FROM subjects WHERE id = ?'
                 );
@@ -72,75 +149,224 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$classroomExists || !$subjectExists) {
                     $error = 'Please select a valid classroom and subject.';
                 } else {
-                    // Prevent overlapping reservations in the same classroom.
-                    $sql = '
-                        SELECT COUNT(*)
-                        FROM reservations
-                        WHERE classroom_id = :classroom_id
-                          AND starts_at < :ends_at
-                          AND ends_at > :starts_at
-                    ';
+                    // Get the selected subject name.
+                    $stmt = $pdo->prepare('
+                        SELECT name
+                        FROM subjects
+                        WHERE id = :subject_id
+                    ');
+                    $stmt->execute(['subject_id' => $subjectId]);
+                    $subjectName = $stmt->fetchColumn();
 
-                    $params = [
-                        'classroom_id' => $classroomId,
-                        'starts_at' => $startsAt,
-                        'ends_at' => $endsAt
-                    ];
+                    // Get the selected classroom name.
+                    $stmt = $pdo->prepare('
+                        SELECT room_code
+                        FROM classrooms
+                        WHERE id = :classroom_id
+                    ');
+                    $stmt->execute(['classroom_id' => $classroomId]);
+                    $classroomName = $stmt->fetchColumn();
+
+                    // Load the old reservation when editing.
+                    $oldReservation = null;
 
                     if ($id > 0) {
-                        $sql .= ' AND id != :id';
-                        $params['id'] = $id;
+                        $stmt = $pdo->prepare('
+                            SELECT
+                                r.subject_id,
+                                s.name AS subject_name,
+                                r.classroom_id,
+                                c.room_code,
+                                r.starts_at,
+                                r.ends_at,
+                                r.notes
+                            FROM reservations r
+                            JOIN subjects s ON s.id = r.subject_id
+                            JOIN classrooms c ON c.id = r.classroom_id
+                            WHERE r.id = :id AND r.user_id = :user_id
+                        ');
+
+                        $stmt->execute([
+                            'id' => $id,
+                            'user_id' => $userId
+                        ]);
+
+                        $oldReservation = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                        if (!$oldReservation) {
+                            $error = 'Reservation not found or access denied.';
+                        }
                     }
 
-                    $check = $pdo->prepare($sql);
-                    $check->execute($params);
+                    if (!$error) {
+                        // Prevent overlapping reservations in the same classroom.
+                        $sql = '
+                            SELECT COUNT(*)
+                            FROM reservations
+                            WHERE classroom_id = :classroom_id
+                              AND starts_at < :ends_at
+                              AND ends_at > :starts_at
+                        ';
 
-                    if ($check->fetchColumn() > 0) {
-                        $error = 'This classroom is already reserved during that time.';
-                    } else {
+                        $params = [
+                            'classroom_id' => $classroomId,
+                            'starts_at' => $startsAt,
+                            'ends_at' => $endsAt
+                        ];
+
                         if ($id > 0) {
-                            // Update only a reservation belonging to this professor.
-                            $stmt = $pdo->prepare('
-                                UPDATE reservations
-                                SET classroom_id = :classroom_id,
-                                    subject_id = :subject_id,
-                                    starts_at = :starts_at,
-                                    ends_at = :ends_at,
-                                    notes = :notes
-                                WHERE id = :id AND user_id = :user_id
-                            ');
-
-                            $stmt->execute([
-                                'classroom_id' => $classroomId,
-                                'subject_id' => $subjectId,
-                                'starts_at' => $startsAt,
-                                'ends_at' => $endsAt,
-                                'notes' => $notes,
-                                'id' => $id,
-                                'user_id' => $user['id']
-                            ]);
-                        } else {
-                            // Create a new reservation for this professor.
-                            $stmt = $pdo->prepare('
-                                INSERT INTO reservations
-                                    (user_id, classroom_id, subject_id,
-                                     starts_at, ends_at, notes)
-                                VALUES
-                                    (:user_id, :classroom_id, :subject_id,
-                                     :starts_at, :ends_at, :notes)
-                            ');
-
-                            $stmt->execute([
-                                'user_id' => $user['id'],
-                                'classroom_id' => $classroomId,
-                                'subject_id' => $subjectId,
-                                'starts_at' => $startsAt,
-                                'ends_at' => $endsAt,
-                                'notes' => $notes
-                            ]);
+                            $sql .= ' AND id != :id';
+                            $params['id'] = $id;
                         }
 
-                        reservation_redirect();
+                        $check = $pdo->prepare($sql);
+                        $check->execute($params);
+
+                        if ($check->fetchColumn() > 0) {
+                            $error = 'This classroom is already reserved during that time.';
+                        } else {
+                            // UPDATE EXISTING RESERVATION
+                            if ($id > 0) {
+                                $stmt = $pdo->prepare('
+                                    UPDATE reservations
+                                    SET classroom_id = :classroom_id,
+                                        subject_id = :subject_id,
+                                        starts_at = :starts_at,
+                                        ends_at = :ends_at,
+                                        notes = :notes
+                                    WHERE id = :id AND user_id = :user_id
+                                ');
+
+                                $stmt->execute([
+                                    'classroom_id' => $classroomId,
+                                    'subject_id' => $subjectId,
+                                    'starts_at' => $startsAt,
+                                    'ends_at' => $endsAt,
+                                    'notes' => $notes,
+                                    'id' => $id,
+                                    'user_id' => $userId
+                                ]);
+
+                                // Collect all changes into one notification.
+                                $changes = [];
+
+                                // Subject changed?
+                                if ((int)$oldReservation['subject_id'] !== $subjectId) {
+                                    $changes[] = 'Predmet: ' .
+                                        $oldReservation['subject_name'] .
+                                        ' → ' . $subjectName;
+                                }
+                                else {
+                                    $changes[] = 'Predmet: ' .
+                                        $oldReservation['subject_name'];
+                                }
+
+                                // Classroom changed?
+                                if ((int)$oldReservation['classroom_id'] !== $classroomId) {
+                                    $changes[] = 'Učionica: ' .
+                                        $oldReservation['room_code'] .
+                                        ' → ' . $classroomName;
+                                }
+                                else{
+                                    $changes[] = 'Učionica: ' .
+                                        $oldReservation['room_code'];
+                                }
+
+                                // Start time changed?
+                                if (
+                                    strtotime($oldReservation['starts_at']) !==
+                                    strtotime($startsAt)
+                                ) {
+                                    $changes[] = 'Početak: ' .
+                                        date('d.m.Y H:i', strtotime($oldReservation['starts_at'])) .
+                                        ' → ' .
+                                        date('d.m.Y H:i', strtotime($startsAt));
+                                }
+                                else{
+                                    $changes[] = 'Početak: ' .
+                                        date('d.m.Y H:i', strtotime($oldReservation['starts_at']));
+                                }
+
+                                // End time changed?
+                                if (
+                                    strtotime($oldReservation['ends_at']) !==
+                                    strtotime($endsAt)
+                                ) {
+                                    $changes[] = 'Završetak: ' .
+                                        date('d.m.Y H:i', strtotime($oldReservation['ends_at'])) .
+                                        ' → ' .
+                                        date('d.m.Y H:i', strtotime($endsAt));
+                                }
+                                else {
+                                    $changes[] = 'Završetak: ' .
+                                        date('d.m.Y H:i', strtotime($oldReservation['ends_at']));
+                                }
+
+                                // Notes changed?
+                                if ($oldReservation['notes'] !== $notes) {
+                                    $oldNotes = $oldReservation['notes'] ?: 'Bez napomena';
+                                    $newNotes = $notes ?: 'Bez napomena';
+
+                                    $changes[] = 'Napomene: ' .
+                                        $oldNotes . ' → ' . $newNotes;
+                                }
+                                else{
+                                    $oldNotes = $oldReservation['notes'] ?: 'Bez napomena';
+
+                                    $changes[] = 'Napomene: ' .
+                                        $oldNotes;
+                                }
+
+                                // Create notifications only if something changed.
+                                if (!empty($changes)) {
+                                    $notificationMessage =
+                                        "Došlo je do promjena u rezervaciji:\n- " .
+                                        implode("\n- ", $changes);
+
+                                    // Notify subscribers of the new subject.
+                                    create_reservation_notification(
+                                        $pdo,
+                                        $subjectId,
+                                        (int)$userId,
+                                        'Promjena rezervacije',
+                                        $notificationMessage
+                                    );
+                                }
+                            } else {
+                                // CREATE NEW RESERVATION.
+                                $stmt = $pdo->prepare('
+                                    INSERT INTO reservations
+                                        (user_id, classroom_id, subject_id,
+                                         starts_at, ends_at, notes)
+                                    VALUES
+                                        (:user_id, :classroom_id, :subject_id,
+                                         :starts_at, :ends_at, :notes)
+                                ');
+
+                                $stmt->execute([
+                                    'user_id' => $userId,
+                                    'classroom_id' => $classroomId,
+                                    'subject_id' => $subjectId,
+                                    'starts_at' => $startsAt,
+                                    'ends_at' => $endsAt,
+                                    'notes' => $notes
+                                ]);
+
+                                // Notify subscribers of the new reservation.
+                                create_reservation_notification(
+                                    $pdo,
+                                    $subjectId,
+                                    (int)$userId,
+                                    'Nova rezervacija',
+                                    'Kreirana je nova rezervacija za predmet "' .
+                                    $subjectName . '", učionica: ' .
+                                    $classroomName . ', početak: ' .
+                                    date('d.m.Y H:i', strtotime($startsAt)) . ".\nNapomene: " . $notes
+                                );
+                            }
+
+                            reservation_redirect();
+                        }
                     }
                 }
             }
@@ -148,16 +374,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Load classrooms and subjects for the form.
-$classrooms = $pdo->query(
-    'SELECT id, room_code, capacity FROM classrooms ORDER BY room_code'
-)->fetchAll(PDO::FETCH_ASSOC);
+// LOAD CLASSROOMS AND SUBJECTS FOR THE FORM.
+$classrooms = $pdo->query('
+    SELECT id, room_code, capacity
+    FROM classrooms
+    ORDER BY room_code
+')->fetchAll(PDO::FETCH_ASSOC);
 
-$subjects = $pdo->query(
-    'SELECT id, name FROM subjects ORDER BY name'
-)->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $pdo->prepare('
+    SELECT s.id, s.name
+    FROM subjects s
+    INNER JOIN user_subjects us ON us.subject_id = s.id
+    WHERE us.user_id = :user_id
+    ORDER BY s.name
+');
 
-// Load a reservation for editing, but only if it belongs to this professor.
+$stmt->execute([
+    'user_id' => $userId
+]);
+
+$subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// LOAD RESERVATION FOR EDITING.
 $editing = null;
 
 if (isset($_GET['edit'])) {
@@ -166,14 +404,16 @@ if (isset($_GET['edit'])) {
         FROM reservations
         WHERE id = :id AND user_id = :user_id
     ');
+
     $stmt->execute([
         'id' => (int)$_GET['edit'],
-        'user_id' => $user['id']
+        'user_id' => $userId
     ]);
+
     $editing = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-// Load this professor's reservations.
+// LOAD THIS PROFESSOR'S FUTURE AND ONGOING RESERVATIONS.
 $stmt = $pdo->prepare('
     SELECT
         r.id,
@@ -186,9 +426,11 @@ $stmt = $pdo->prepare('
     JOIN subjects s ON s.id = r.subject_id
     JOIN classrooms c ON c.id = r.classroom_id
     WHERE r.user_id = :user_id
-    ORDER BY r.starts_at DESC
+      AND r.ends_at > NOW()
+    ORDER BY r.starts_at ASC
 ');
-$stmt->execute(['user_id' => $user['id']]);
+
+$stmt->execute(['user_id' => $userId]);
 $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require __DIR__ . '/header.php';
