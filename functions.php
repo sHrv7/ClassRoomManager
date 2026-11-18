@@ -40,7 +40,7 @@ function current_user(): ?array
     }
 
     $statement = db()->prepare(
-        'SELECT Username, Email, Password, Role, Active FROM users WHERE Email = :email LIMIT 1'
+        'SELECT id, Username, Email, Password, Role, Active FROM users WHERE Email = :email LIMIT 1'
     );
     $statement->execute(['email' => $_SESSION['user_email']]);
     $user = $statement->fetch();
