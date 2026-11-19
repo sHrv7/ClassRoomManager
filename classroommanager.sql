@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 18, 2026 at 06:08 PM
+-- Generation Time: Nov 19, 2026 at 11:56 PM
 -- Server version: 8.0.36
 -- PHP Version: 8.0.30
 
@@ -20,6 +20,26 @@ SET time_zone = "+00:00";
 --
 -- Database: `classroommanager`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `categories`
+--
+
+CREATE TABLE `categories` (
+  `id` int NOT NULL,
+  `name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `categories`
+--
+
+INSERT INTO `categories` (`id`, `name`) VALUES
+(1, 'Opće vijesti'),
+(2, 'Promjena rasporeda'),
+(3, 'Predmetne vijesti');
 
 -- --------------------------------------------------------
 
@@ -51,22 +71,28 @@ INSERT INTO `classrooms` (`id`, `room_code`, `capacity`) VALUES
 
 CREATE TABLE `notifications` (
   `id` int NOT NULL,
-  `subject_id` int NOT NULL,
+  `subject_id` int DEFAULT NULL,
   `professor_id` int NOT NULL,
   `title` varchar(255) NOT NULL,
   `message` text NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `image` varchar(255) DEFAULT NULL,
+  `category_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `notifications`
 --
 
-INSERT INTO `notifications` (`id`, `subject_id`, `professor_id`, `title`, `message`, `created_at`) VALUES
-(19, 2, 3, 'Predavanje otkazano', 'Predavanje iz predmeta Programming u učionici A101 na datum 19.11.2026 20:25 je otkazano.', '2026-11-18 16:33:38'),
-(21, 1, 3, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Mathematics\", učionica: A101, početak: 18.11.2026 17:46.\nasd', '2026-11-18 16:46:24'),
-(22, 2, 3, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Mathematics → Programming\n- Učionica: A101 → B202\n- Početak: 18.11.2026 17:46\n- Završetak: 18.11.2026 20:46\n- Napomene: asd → asdaaaa', '2026-11-18 16:56:03'),
-(25, 4, 3, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Web Design\n- Učionica: A101\n- Početak: 19.11.2026 07:30 → 19.11.2026 08:30\n- Završetak: 19.11.2026 08:30 → 19.11.2026 09:30\n- Napomene: asd', '2026-11-18 17:03:37');
+INSERT INTO `notifications` (`id`, `subject_id`, `professor_id`, `title`, `message`, `created_at`, `image`, `category_id`) VALUES
+(19, 2, 3, 'Predavanje otkazano', 'Predavanje iz predmeta Programming u učionici A101 na datum 19.11.2026 20:25 je otkazano.', '2026-11-18 16:33:38', NULL, 2),
+(21, 1, 3, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Mathematics\", učionica: A101, početak: 18.11.2026 17:46.\nasd', '2026-11-18 16:46:24', NULL, 2),
+(22, 2, 3, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Mathematics → Programming\n- Učionica: A101 → B202\n- Početak: 18.11.2026 17:46\n- Završetak: 18.11.2026 20:46\n- Napomene: asd → asdaaaa', '2026-11-18 16:56:03', NULL, 2),
+(25, 4, 3, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Web Design\n- Učionica: A101\n- Početak: 19.11.2026 07:30 → 19.11.2026 08:30\n- Završetak: 19.11.2026 08:30 → 19.11.2026 09:30\n- Napomene: asd', '2026-11-18 17:03:37', NULL, 2),
+(26, 3, 3, 'Nova vijest', 'Ayoo', '2026-11-19 22:29:56', 'uploads/announcements/21ebe659bf217f1f206eababfcf95907.jpg', 2),
+(27, 3, 3, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Databases\", učionica: A101, početak: 24.11.2026 09:50.\nNapomene: Novi sat', '2026-11-19 22:51:27', NULL, 2),
+(28, NULL, 3, 'asd', 'asd', '2026-11-19 22:53:32', 'uploads/announcements/e85bb0c3cd797897afecb5f9e80e0088.jpg', 1),
+(29, 2, 3, 'asasdasdasd', 'asdasdasd', '2026-11-19 22:54:34', 'uploads/announcements/1e21fb8a44f7ed219d7dbe1e1cbce06f.jpg', 3);
 
 -- --------------------------------------------------------
 
@@ -93,7 +119,8 @@ INSERT INTO `reservations` (`id`, `classroom_id`, `subject_id`, `user_id`, `star
 (2, 4, 1, 3, '2026-11-20 12:15:00', '2026-11-20 13:30:00', 'Obavezno predavanje'),
 (4, 1, 1, 3, '2026-11-18 11:30:00', '2026-11-18 12:45:00', 'Kolokvij'),
 (8, 1, 4, 3, '2026-11-19 08:30:00', '2026-11-19 09:30:00', 'asd'),
-(9, 3, 2, 3, '2026-11-20 13:30:00', '2026-11-20 14:15:00', 'asdaaaa');
+(9, 3, 2, 3, '2026-11-20 13:30:00', '2026-11-20 14:15:00', 'asdaaaa'),
+(10, 1, 3, 3, '2026-11-24 09:50:00', '2026-11-24 10:50:00', 'Novi sat');
 
 -- --------------------------------------------------------
 
@@ -168,6 +195,12 @@ INSERT INTO `user_subjects` (`user_id`, `subject_id`) VALUES
 --
 
 --
+-- Indexes for table `categories`
+--
+ALTER TABLE `categories`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `classrooms`
 --
 ALTER TABLE `classrooms`
@@ -179,7 +212,8 @@ ALTER TABLE `classrooms`
 ALTER TABLE `notifications`
   ADD PRIMARY KEY (`id`),
   ADD KEY `subject_id` (`subject_id`),
-  ADD KEY `professor_id` (`professor_id`);
+  ADD KEY `professor_id` (`professor_id`),
+  ADD KEY `fk_notifications_category` (`category_id`);
 
 --
 -- Indexes for table `reservations`
@@ -216,6 +250,12 @@ ALTER TABLE `user_subjects`
 --
 
 --
+-- AUTO_INCREMENT for table `categories`
+--
+ALTER TABLE `categories`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `classrooms`
 --
 ALTER TABLE `classrooms`
@@ -225,13 +265,13 @@ ALTER TABLE `classrooms`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `subjects`
@@ -253,6 +293,7 @@ ALTER TABLE `users`
 -- Constraints for table `notifications`
 --
 ALTER TABLE `notifications`
+  ADD CONSTRAINT `fk_notifications_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`),
   ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`professor_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 

@@ -20,6 +20,9 @@ $pageTitle = $pageTitle ?? APP_NAME;
     <?php if (($pageTitle ?? '') === 'Obavijesti'): ?>
         <link rel="stylesheet" href="assets/notifications.css?v=1">
     <?php endif; ?>
+    <?php if (($pageTitle ?? '') === 'Nova objava'): ?>
+        <link rel="stylesheet" href="assets/create_post.css?v=1">
+    <?php endif; ?>
 </head>
 <body>
 <header class="site-header">

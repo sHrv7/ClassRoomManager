@@ -1,0 +1,43 @@
+.create-post-page .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.create-post-page input,
+.create-post-page select,
+.create-post-page textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+}
+
+.create-post-page textarea {
+    resize: vertical;
+}
+
+.create-post-page input:focus,
+.create-post-page select:focus,
+.create-post-page textarea:focus {
+    outline: none;
+    border-color: var(--green);
+}
+
+.create-post-page .form-group small {
+    font-size: 12px;
+}
+
+.success-message {
+    color: var(--green);
+    margin-bottom: 16px;
+}
+
+.error-message {
+    color: #b42318;
+    margin-bottom: 16px;
+}

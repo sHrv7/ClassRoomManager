@@ -7,6 +7,7 @@ require_login();
 
 $user = current_user();
 $userId = $user['id'] ?? $user['ID'] ?? null;
+$isProfessor = ($user['Role'] ?? '') === 'Profesor';
 
 if (!$userId) {
     exit('User ID not found.');
@@ -19,11 +20,17 @@ $stmt = db()->prepare("
         n.title,
         n.message,
         n.created_at,
+        n.image,
+        c.name AS category_name,
         u.username AS professor_name
     FROM notifications n
     JOIN users u ON u.id = n.professor_id
-    JOIN user_subjects us ON us.subject_id = n.subject_id
-    WHERE us.user_id = :user_id
+    LEFT JOIN categories c ON c.id = n.category_id
+    LEFT JOIN user_subjects us
+        ON us.subject_id = n.subject_id
+        AND us.user_id = :user_id
+    WHERE n.subject_id IS NULL
+       OR us.user_id IS NOT NULL
     ORDER BY n.created_at DESC
 ");
 
@@ -47,8 +54,18 @@ require __DIR__ . '/header.php';
             </p>
         </div>
 
-        <div class="notification-count">
-            <?= count($notifications) ?> obavijesti
+        <div class="notifications-actions">
+
+            <div class="notification-count">
+                <?= count($notifications) ?> obavijesti
+            </div>
+
+            <?php if ($isProfessor): ?>
+                <a href="create_post.php" class="button button-primary">
+                    + Nova objava
+                </a>
+            <?php endif; ?>
+
         </div>
     </div>
 
@@ -74,6 +91,10 @@ require __DIR__ . '/header.php';
                         <div>
                             <h2><?= e($notification['title']) ?></h2>
 
+                            <p class="notification-category">
+                                <?= e($notification['category_name'] ?? 'Bez kategorije') ?>
+                            </p>
+
                             <p class="notification-meta">
                                 <?= e($notification['professor_name']) ?>
                                 ·
@@ -88,6 +109,15 @@ require __DIR__ . '/header.php';
                     <p class="notification-message">
                         <?= nl2br(e($notification['message'])) ?>
                     </p>
+
+                    <?php if (!empty($notification['image'])): ?>
+                        <img
+                            src="<?= e($notification['image']) ?>"
+                            alt="Slika uz objavu"
+                            class="notification-image"
+                            width="200"
+                        >
+                    <?php endif; ?>
 
                 </article>
 

@@ -32,9 +32,9 @@ function create_reservation_notification(
 ): void {
     $stmt = $pdo->prepare('
         INSERT INTO notifications
-            (subject_id, professor_id, title, message)
+            (subject_id, professor_id, category_id, title, message)
         VALUES
-            (:subject_id, :professor_id, :title, :message)
+            (:subject_id, :professor_id, 2, :title, :message)
     ');
 
     $stmt->execute([
