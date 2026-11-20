@@ -8,7 +8,7 @@ require_login();
 $user = current_user();
 $userId = $user['id'] ?? $user['ID'];
 
-if (($user['Role'] ?? '') !== 'Profesor') {
+if (($user['Role'] ?? '') !== 'Professor') {
     http_response_code(403);
     exit('Access denied. This page is for professors only.');
 }

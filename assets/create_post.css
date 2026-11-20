@@ -21,6 +21,61 @@
     resize: vertical;
 }
 
+.create-post-page textarea[hidden] {
+    display: none;
+}
+
+.rich-text-editor {
+    background: var(--surface);
+}
+
+.rich-text-editor .ql-editor {
+    min-height: 180px;
+    color: var(--ink);
+    font: inherit;
+}
+
+.rich-text-editor .ql-toolbar.ql-snow,
+.rich-text-editor .ql-container.ql-snow {
+    border-color: var(--line);
+}
+
+.rich-text-editor .ql-toolbar.ql-snow {
+    border-radius: 4px 4px 0 0;
+}
+
+.rich-text-editor .ql-container.ql-snow {
+    border-radius: 0 0 4px 4px;
+}
+
+.notification-edit-action {
+    margin-top: 16px;
+}
+
+.post-delete-form {
+    margin-top: 14px;
+}
+
+.button-danger {
+    border-color: #b42318;
+    background: transparent;
+    color: #b42318;
+}
+
+.button-danger:hover {
+    background: #b42318;
+    color: #fff;
+}
+
+.create-post-page .rich-text-editor:focus-within .ql-toolbar.ql-snow,
+.create-post-page .rich-text-editor:focus-within .ql-container.ql-snow {
+    border-color: var(--green);
+}
+
+.create-post-page #message-error:not(:empty) {
+    color: #b42318;
+}
+
 .create-post-page input:focus,
 .create-post-page select:focus,
 .create-post-page textarea:focus {

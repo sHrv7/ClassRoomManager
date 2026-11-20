@@ -22,6 +22,11 @@ $pageTitle = $pageTitle ?? APP_NAME;
     <?php endif; ?>
     <?php if (($pageTitle ?? '') === 'Nova objava'): ?>
         <link rel="stylesheet" href="assets/create_post.css?v=1">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">
+    <?php endif; ?>
+    <?php if (($pageTitle ?? '') === 'Uredi obavijest'): ?>
+        <link rel="stylesheet" href="assets/create_post.css?v=1">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">
     <?php endif; ?>
 </head>
 <body>
@@ -32,7 +37,7 @@ $pageTitle = $pageTitle ?? APP_NAME;
         <?php if ($user): ?>
             <a href="timetable.php">Raspored</a>
             <a href="notifications.php">Obavjesti</a>
-            <?php if ($user['Role'] === 'Profesor'): ?>
+            <?php if ($user['Role'] === 'Professor'): ?>
                 <a href="reservations.php">Moje rezervacije</a>
             <?php endif; ?>
             <a href="profile.php">Moj profil</a>

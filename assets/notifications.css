@@ -68,6 +68,26 @@
     margin: 18px 0;
 }
 
+.notification-message > :first-child {
+    margin-top: 0;
+}
+
+.notification-message > :last-child {
+    margin-bottom: 0;
+}
+
+.notification-message blockquote {
+    margin: 12px 0;
+    padding-left: 14px;
+    border-left: 3px solid var(--lime);
+    color: var(--muted);
+}
+
+.notification-message ul,
+.notification-message ol {
+    padding-left: 24px;
+}
+
 .unread-label {
     background: var(--lime);
     color: var(--ink);
@@ -83,10 +103,6 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 16px;
-}
-
-.notification-message {
-    white-space: pre-line;
 }
 
 .notifications-actions {

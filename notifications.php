@@ -7,7 +7,10 @@ require_login();
 
 $user = current_user();
 $userId = $user['id'] ?? $user['ID'] ?? null;
-$isProfessor = ($user['Role'] ?? '') === 'Profesor';
+$isProfessor = ($user['Role'] ?? '') === 'Professor';
+$isAdmin = ($user['Role'] ?? '') === 'Admin';
+$notice = (string) ($_SESSION['notification_notice'] ?? '');
+unset($_SESSION['notification_notice']);
 
 if (!$userId) {
     exit('User ID not found.');
@@ -17,6 +20,8 @@ if (!$userId) {
 $stmt = db()->prepare("
     SELECT DISTINCT
         n.id,
+        n.subject_id,
+        n.professor_id,
         n.title,
         n.message,
         n.created_at,
@@ -31,10 +36,16 @@ $stmt = db()->prepare("
         AND us.user_id = :user_id
     WHERE n.subject_id IS NULL
        OR us.user_id IS NOT NULL
+       OR :is_admin = 1
+       OR n.professor_id = :author_id
     ORDER BY n.created_at DESC
 ");
 
-$stmt->execute(['user_id' => $userId]);
+$stmt->execute([
+    'user_id' => $userId,
+    'is_admin' => $isAdmin ? 1 : 0,
+    'author_id' => $userId,
+]);
 $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $pageTitle = 'Obavijesti';
@@ -43,6 +54,10 @@ require __DIR__ . '/header.php';
 ?>
 
 <main class="page-shell notifications-page">
+
+    <?php if ($notice !== ''): ?>
+        <p class="success-message" role="status"><?= e($notice) ?></p>
+    <?php endif; ?>
 
     <div class="notifications-heading">
         <div>
@@ -106,9 +121,9 @@ require __DIR__ . '/header.php';
                         </div>
                     </div>
 
-                    <p class="notification-message">
-                        <?= nl2br(e($notification['message'])) ?>
-                    </p>
+                    <div class="notification-message">
+                        <?= notification_message_html((string) $notification['message']) ?>
+                    </div>
 
                     <?php if (!empty($notification['image'])): ?>
                         <img
@@ -117,6 +132,14 @@ require __DIR__ . '/header.php';
                             class="notification-image"
                             width="200"
                         >
+                    <?php endif; ?>
+
+                    <?php if ($notification['subject_id'] === null && ($isAdmin || (int) $notification['professor_id'] === (int) $userId)): ?>
+                        <div class="notification-edit-action">
+                            <a class="button button-secondary" href="edit_post.php?id=<?= (int) $notification['id'] ?>">
+                                Uredi obavijest
+                            </a>
+                        </div>
                     <?php endif; ?>
 
                 </article>

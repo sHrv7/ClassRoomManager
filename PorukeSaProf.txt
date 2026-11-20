@@ -8,15 +8,15 @@ Uređuje podatke o učionicama, primjerice kapacitet i oznaku prostorije.
 Dodaje nove učionice.
  
 Profesor
-Pregledava i otkazuje vlastite rezervacije.
+[x] Pregledava i otkazuje vlastite rezervacije.
 Rezervira odgovarajuću slobodnu učionicu.
 Unosi očekivani broj studenata.
-Odabire predmet, datum i termin predavanja.
+[x] Odabire predmet, datum i termin predavanja.
 Pregledava dostupne učionice.
  
 Student
-Vidi dodijeljenu učionicu i vrijeme održavanja predavanja.
-Filtrira raspored prema predmetu, datumu ili profesoru.
+[x] Vidi dodijeljenu učionicu i vrijeme održavanja predavanja.
+[x] Filtrira raspored prema predmetu, datumu ili profesoru.
 Pregledava raspored predavanja putem aplikacije ili API-ja.
 
 
@@ -30,10 +30,11 @@ Podjela na administratora, profesora i studenta ima smisla, a navedene funkciona
 
 Uz rezervacije učionica potrebno je uključiti i obavezne elemente iz uputa za projekt:
 Javni dio aplikacije i modul vijesti ili obavijesti, 
-primjerice obavijesti o promjenama rasporeda i otkazivanju predavanja.
+[x] primjerice obavijesti o promjenama rasporeda i otkazivanju predavanja.
 Potrebni su popis i detalji obavijesti, kategorije, pretraživanje i straničenje.
-CMS za upravljanje obavijestima i kategorijama, uključujući uređivač obogaćenog teksta, 
-slike te spremanje nacrta, objavljivanje, uređivanje i brisanje.
+CMS za upravljanje obavijestima i kategorijama.
+[x] Uređivač obogaćenog teksta, dodavanje/zamjena/uklanjanje slika te stvaranje, objavljivanje, uređivanje i brisanje obavijesti.
+Preostalo: spremanje nacrta i administracija kategorija.
 [x] Registracija, prijava, odjava, korisnički profil i promjena lozinke.
 [x] Administrator mora upravljati korisnicima, njihovim ulogama te aktivacijom i deaktivacijom računa.
 Profesor može preuzeti ovlasti urednika za vlastite obavijesti, 
