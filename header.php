@@ -17,9 +17,9 @@ $pageTitle = $pageTitle ?? APP_NAME;
     <?php if (($pageTitle ?? '') === 'My reservations'): ?>
         <link rel="stylesheet" href="assets/reservations.css">
     <?php endif; ?>
-    <?php if (($pageTitle ?? '') === 'Obavijesti'): ?>
-        <link rel="stylesheet" href="assets/notifications.css?v=1">
-    <?php endif; ?>
+    <?php if (in_array($pageTitle ?? '', ['Obavijesti', 'Obavijest'], true)): ?>
+    <link rel="stylesheet" href="assets/notifications.css">
+<?php endif; ?>
     <?php if (($pageTitle ?? '') === 'Nova objava'): ?>
         <link rel="stylesheet" href="assets/create_post.css?v=1">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">

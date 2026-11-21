@@ -111,6 +111,358 @@
     gap: 16px;
 }
 
+.notification-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.notification-card-link:hover {
+    transform: translateY(-2px);
+    border-color: var(--green);
+}
+
+.notification-card-link h2 {
+    transition: color 0.2s ease;
+}
+
+.notification-card-link:hover p {
+    color: var(--green);
+}
+
+.notification-detail {
+    margin-top: 24px;
+    padding: 30px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+
+.notification-detail h1 {
+    margin: 12px 0;
+}
+
+.notification-detail .notification-message {
+    margin-top: 28px;
+    line-height: 1.7;
+}
+
+.notification-detail .notification-image {
+    display: block;
+    height: auto;
+    margin-top: 24px;
+    border-radius: 6px;
+}
+
+
+/* Full notification page */
+.notification-detail-page {
+    max-width: 950px;
+    padding-top: 35px;
+    padding-bottom: 70px;
+}
+
+/* Back link */
+.notification-back-link {
+    display: inline-block;
+    margin-bottom: 22px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.notification-back-link:hover {
+    color: var(--green);
+}
+
+/* Main notification card */
+.notification-detail {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+/* Header */
+.notification-detail-header {
+    padding: 35px 40px 28px;
+}
+
+.notification-detail-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+/* Category */
+.notification-detail-category {
+    display: inline-block;
+    padding: 7px 13px;
+    border-radius: 30px;
+    background: rgba(36, 92, 74, 0.10);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.notification-detail-date {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* Title */
+.notification-detail-header h1 {
+    margin: 0 0 26px;
+    color: var(--ink);
+    font-size: clamp(25px, 4vw, 34px);
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+/* Author */
+.notification-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notification-author-avatar {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--green);
+    color: white;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.notification-author-label {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.notification-author strong {
+    color: var(--ink);
+    font-size: 14px;
+}
+
+/* Divider */
+.notification-detail-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 0 40px;
+}
+
+/* Content */
+.notification-detail-content {
+    padding: 30px 40px 35px;
+}
+
+.notification-detail .notification-message {
+    margin: 0;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.85;
+}
+
+.notification-detail .notification-message p {
+    margin-bottom: 16px;
+}
+
+.notification-detail .notification-message h1,
+.notification-detail .notification-message h2,
+.notification-detail .notification-message h3 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    color: var(--ink);
+}
+
+.notification-detail .notification-message a {
+    color: var(--green);
+}
+
+/* Image */
+.notification-detail-image-wrapper {
+    margin-top: 28px;
+}
+
+.notification-detail .notification-image {
+    display: block;
+    max-width: 300px;
+    max-height: 300px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+/* Footer and edit button */
+.notification-detail-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px 40px;
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+}
+
+.notification-detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+}
+
+.notification-detail-image-wrapper {
+    flex: 0 0 220px;
+    width: 220px;
+}
+
+.notification-detail-image-wrapper .notification-image {
+    display: block;
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.notification-detail-heading {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-detail-heading h1 {
+    margin: 16px 0;
+}
+
+.notification-detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+}
+
+.notification-detail-image-wrapper {
+    flex: 0 0 220px;
+    width: 220px;
+    margin: 0;
+    padding: 0;
+}
+
+.notification-detail-image-wrapper .notification-image {
+    display: block;
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin: 0;
+}
+
+.notification-detail-heading {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.notification-detail-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.notification-detail-title-row h1 {
+    margin: 0 0 10px;
+}
+
+.notification-detail-category {
+    display: inline-block;
+    margin-bottom: 18px;
+}
+
+@media (max-width: 600px) {
+    .notification-detail-header {
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .notification-detail-image-wrapper {
+        flex: none;
+        width: 100%;
+    }
+
+    .notification-detail-image-wrapper .notification-image {
+        height: 220px;
+    }
+
+    .notification-detail-title-row {
+        flex-direction: column;
+    }
+}
+
+/* Mobile layout */
+@media (max-width: 600px) {
+    .notification-detail-header {
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .notification-detail-image-wrapper {
+        flex: none;
+        width: 100%;
+    }
+
+    .notification-detail-image-wrapper .notification-image {
+        height: 220px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .notification-detail-page {
+        padding-top: 22px;
+        padding-bottom: 40px;
+    }
+
+    .notification-detail-header {
+        padding: 25px 20px;
+    }
+
+    .notification-detail-top {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .notification-detail-header h1 {
+        font-size: 25px;
+    }
+
+    .notification-detail-divider {
+        margin: 0 20px;
+    }
+
+    .notification-detail-content {
+        padding: 24px 20px;
+    }
+
+    .notification-detail-footer {
+        padding: 18px 20px;
+    }
+}
+
+
 @media (max-width: 600px) {
     .notifications-heading {
         align-items: flex-start;

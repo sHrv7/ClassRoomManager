@@ -86,69 +86,49 @@ require __DIR__ . '/header.php';
 
     <section class="notification-list">
 
-        <?php if (empty($notifications)): ?>
+    <?php if (empty($notifications)): ?>
 
-            <div class="notification-empty">
-                <h2>Trenutno nema obavijesti</h2>
-                <p class="muted">
-                    Kada profesor objavi obavijest iz predmeta
-                    koje pohađate, ona će se pojaviti ovdje.
-                </p>
-            </div>
+        <div class="notification-empty">
+            <h2>Trenutno nema obavijesti</h2>
+            <p class="muted">
+                Kada profesor objavi obavijest iz predmeta
+                koje pohađate, ona će se pojaviti ovdje.
+            </p>
+        </div>
 
-        <?php else: ?>
+    <?php else: ?>
 
-            <?php foreach ($notifications as $notification): ?>
+        <?php foreach ($notifications as $notification): ?>
 
-                <article class="notification-card">
+            <a
+                href="view_notification.php?id=<?= (int) $notification['id'] ?>"
+                class="notification-card notification-card-link"
+            >
+                <div class="notification-card-top">
+                    <div>
+                        <h2><?= e($notification['title']) ?></h2>
 
-                    <div class="notification-card-top">
-                        <div>
-                            <h2><?= e($notification['title']) ?></h2>
+                        <p class="notification-category">
+                            <?= e($notification['category_name'] ?? 'Bez kategorije') ?>
+                        </p>
 
-                            <p class="notification-category">
-                                <?= e($notification['category_name'] ?? 'Bez kategorije') ?>
-                            </p>
-
-                            <p class="notification-meta">
-                                <?= e($notification['professor_name']) ?>
-                                ·
-                                <?= date(
-                                    'd.m.Y. H:i',
-                                    strtotime($notification['created_at'])
-                                ) ?>
-                            </p>
-                        </div>
+                        <p class="notification-meta">
+                            <?= e($notification['professor_name']) ?>
+                            ·
+                            <?= date(
+                                'd.m.Y. H:i',
+                                strtotime($notification['created_at'])
+                            ) ?>
+                        </p>
                     </div>
+                </div>
+            </a>
 
-                    <div class="notification-message">
-                        <?= notification_message_html((string) $notification['message']) ?>
-                    </div>
+        <?php endforeach; ?>
 
-                    <?php if (!empty($notification['image'])): ?>
-                        <img
-                            src="<?= e($notification['image']) ?>"
-                            alt="Slika uz objavu"
-                            class="notification-image"
-                            width="200"
-                        >
-                    <?php endif; ?>
+    <?php endif; ?>
 
-                    <?php if ($notification['subject_id'] === null && ($isAdmin || (int) $notification['professor_id'] === (int) $userId)): ?>
-                        <div class="notification-edit-action">
-                            <a class="button button-secondary" href="edit_post.php?id=<?= (int) $notification['id'] ?>">
-                                Uredi obavijest
-                            </a>
-                        </div>
-                    <?php endif; ?>
-
-                </article>
-
-            <?php endforeach; ?>
-
-        <?php endif; ?>
-
-    </section>
+</section>
 
 </main>
 
