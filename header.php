@@ -40,6 +40,9 @@ $pageTitle = $pageTitle ?? APP_NAME;
             <?php if ($user['Role'] === 'Professor'): ?>
                 <a href="reservations.php">Moje rezervacije</a>
             <?php endif; ?>
+            <?php if ($user['Role'] === 'Admin'): ?>
+                <a href="reservations.php">Rezervacije</a>
+            <?php endif; ?>
             <a href="profile.php">Moj profil</a>
             <?php if ($user['Role'] === 'Admin'): ?>
                 <a href="admin.php">Admin panel</a>

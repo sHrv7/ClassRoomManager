@@ -8,9 +8,13 @@ require_login();
 $user = current_user();
 $userId = $user['id'] ?? $user['ID'];
 
-if (($user['Role'] ?? '') !== 'Professor') {
+$role = $user['Role'] ?? '';
+$isAdmin = $role === 'Admin';
+$isProfessor = $role === 'Professor';
+
+if (!$isAdmin && !$isProfessor) {
     http_response_code(403);
-    exit('Access denied. This page is for professors only.');
+    exit('Access denied.');
 }
 
 $pdo = db();
@@ -57,34 +61,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = (int)($_POST['reservation_id'] ?? 0);
 
             // Get reservation details before deleting.
-            $stmt = $pdo->prepare('
+            $sql = '
                 SELECT
                     r.subject_id,
                     r.starts_at,
                     r.ends_at,
+                    r.user_id,
                     c.room_code
                 FROM reservations r
                 JOIN classrooms c ON c.id = r.classroom_id
-                WHERE r.id = :id AND r.user_id = :user_id
-            ');
+                WHERE r.id = :id
+            ';
 
-            $stmt->execute([
-                'id' => $id,
-                'user_id' => $userId
-            ]);
+            $params = ['id' => $id];
+
+            if (!$isAdmin) {
+                $sql .= ' AND r.user_id = :user_id';
+                $params['user_id'] = $userId;
+            }
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
 
             $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($reservation) {
-                $stmt = $pdo->prepare('
-                    DELETE FROM reservations
-                    WHERE id = :id AND user_id = :user_id
-                ');
+                $sql = 'DELETE FROM reservations WHERE id = :id';
+                $params = ['id' => $id];
 
-                $stmt->execute([
-                    'id' => $id,
-                    'user_id' => $userId
-                ]);
+                if (!$isAdmin) {
+                    $sql .= ' AND user_id = :user_id';
+                    $params['user_id'] = $userId;
+                }
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
 
                 $stmt = $pdo->prepare('
                     SELECT name
@@ -171,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $oldReservation = null;
 
                     if ($id > 0) {
-                        $stmt = $pdo->prepare('
+                        $sql = '
                             SELECT
                                 r.subject_id,
                                 s.name AS subject_name,
@@ -179,17 +190,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 c.room_code,
                                 r.starts_at,
                                 r.ends_at,
-                                r.notes
+                                r.notes,
+                                r.user_id
                             FROM reservations r
                             JOIN subjects s ON s.id = r.subject_id
                             JOIN classrooms c ON c.id = r.classroom_id
-                            WHERE r.id = :id AND r.user_id = :user_id
-                        ');
+                            WHERE r.id = :id
+                        ';
 
-                        $stmt->execute([
-                            'id' => $id,
-                            'user_id' => $userId
-                        ]);
+                        $params = ['id' => $id];
+
+                        if (!$isAdmin) {
+                            $sql .= ' AND r.user_id = :user_id';
+                            $params['user_id'] = $userId;
+                        }
+
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->execute($params);
 
                         $oldReservation = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -227,25 +244,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         } else {
                             // UPDATE EXISTING RESERVATION
                             if ($id > 0) {
-                                $stmt = $pdo->prepare('
+                                $sql = '
                                     UPDATE reservations
                                     SET classroom_id = :classroom_id,
                                         subject_id = :subject_id,
                                         starts_at = :starts_at,
                                         ends_at = :ends_at,
                                         notes = :notes
-                                    WHERE id = :id AND user_id = :user_id
-                                ');
+                                    WHERE id = :id
+                                ';
 
-                                $stmt->execute([
+                                $params = [
                                     'classroom_id' => $classroomId,
                                     'subject_id' => $subjectId,
                                     'starts_at' => $startsAt,
                                     'ends_at' => $endsAt,
                                     'notes' => $notes,
-                                    'id' => $id,
-                                    'user_id' => $userId
-                                ]);
+                                    'id' => $id
+                                ];
+
+                                if (!$isAdmin) {
+                                    $sql .= ' AND user_id = :user_id';
+                                    $params['user_id'] = $userId;
+                                }
+
+                                $stmt = $pdo->prepare($sql);
+                                $stmt->execute($params);
 
                                 // Collect all changes into one notification.
                                 $changes = [];
@@ -381,56 +405,88 @@ $classrooms = $pdo->query('
     ORDER BY room_code
 ')->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $pdo->prepare('
-    SELECT s.id, s.name
-    FROM subjects s
-    INNER JOIN user_subjects us ON us.subject_id = s.id
-    WHERE us.user_id = :user_id
-    ORDER BY s.name
-');
+if ($isAdmin) {
+    $subjects = $pdo->query('
+        SELECT id, name
+        FROM subjects
+        ORDER BY name
+    ')->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $stmt = $pdo->prepare('
+        SELECT s.id, s.name
+        FROM subjects s
+        INNER JOIN user_subjects us ON us.subject_id = s.id
+        WHERE us.user_id = :user_id
+        ORDER BY s.name
+    ');
 
-$stmt->execute([
-    'user_id' => $userId
-]);
-
-$subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->execute(['user_id' => $userId]);
+    $subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // LOAD RESERVATION FOR EDITING.
 $editing = null;
 
 if (isset($_GET['edit'])) {
-    $stmt = $pdo->prepare('
+    $sql = '
         SELECT *
         FROM reservations
-        WHERE id = :id AND user_id = :user_id
-    ');
+        WHERE id = :id
+    ';
 
-    $stmt->execute([
-        'id' => (int)$_GET['edit'],
-        'user_id' => $userId
-    ]);
+    $params = ['id' => (int) $_GET['edit']];
+
+    if (!$isAdmin) {
+        $sql .= ' AND user_id = :user_id';
+        $params['user_id'] = $userId;
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
 
     $editing = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
 // LOAD THIS PROFESSOR'S FUTURE AND ONGOING RESERVATIONS.
-$stmt = $pdo->prepare('
-    SELECT
-        r.id,
-        r.starts_at,
-        r.ends_at,
-        r.notes,
-        s.name AS subject_name,
-        c.room_code
-    FROM reservations r
-    JOIN subjects s ON s.id = r.subject_id
-    JOIN classrooms c ON c.id = r.classroom_id
-    WHERE r.user_id = :user_id
-      AND r.ends_at > NOW()
-    ORDER BY r.starts_at ASC
-');
+if ($isAdmin) {
+    $stmt = $pdo->query('
+        SELECT
+            r.id,
+            r.starts_at,
+            r.ends_at,
+            r.notes,
+            s.name AS subject_name,
+            c.room_code,
+            u.Username AS professor_name
+        FROM reservations r
+        JOIN subjects s ON s.id = r.subject_id
+        JOIN classrooms c ON c.id = r.classroom_id
+        JOIN users u ON u.id = r.user_id
+        WHERE r.ends_at > NOW()
+        ORDER BY r.starts_at ASC
+    ');
+} else {
+    $stmt = $pdo->prepare('
+        SELECT
+            r.id,
+            r.starts_at,
+            r.ends_at,
+            r.notes,
+            s.name AS subject_name,
+            c.room_code,
+            u.Username AS professor_name
+        FROM reservations r
+        JOIN subjects s ON s.id = r.subject_id
+        JOIN classrooms c ON c.id = r.classroom_id
+        JOIN users u ON u.id = r.user_id
+        WHERE r.user_id = :user_id
+          AND r.ends_at > NOW()
+        ORDER BY r.starts_at ASC
+    ');
 
-$stmt->execute(['user_id' => $userId]);
+    $stmt->execute(['user_id' => $userId]);
+}
+
 $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require __DIR__ . '/header.php';
@@ -440,9 +496,13 @@ require __DIR__ . '/header.php';
 
     <div class="reservations-heading">
         <div>
-            <p class="eyebrow">PROFESSOR AREA</p>
-            <h1>My reservations</h1>
-            <p class="lead">Create and manage your classroom reservations.</p>
+            <p class="eyebrow"><?= $isAdmin ? 'ADMINISTRATION' : 'PROFESSOR AREA' ?></p>
+            <h1><?= $isAdmin ? 'All reservations' : 'My reservations' ?></h1>
+            <p class="lead">
+                <?= $isAdmin
+                    ? 'View and manage reservations from all professors.'
+                    : 'Create and manage your classroom reservations.' ?>
+            </p>
         </div>
     </div>
 
@@ -518,7 +578,7 @@ require __DIR__ . '/header.php';
 
         <section class="reservations-list-panel">
             <div class="panel-heading">
-                <h2>Your reservations</h2>
+                <h2><?= $isAdmin ? 'All reservations' : 'Your reservations' ?></h2>
                 <span class="reservation-count">
                     <?= count($reservations) ?>
                 </span>
@@ -526,7 +586,9 @@ require __DIR__ . '/header.php';
 
             <?php if (!$reservations): ?>
                 <p class="empty-reservations">
-                    You haven't created any reservations yet.
+                    <?= $isAdmin
+                        ? 'There are no upcoming reservations.'
+                        : "You haven't created any reservations yet." ?>
                 </p>
             <?php else: ?>
                 <div class="reservation-list">
@@ -535,6 +597,11 @@ require __DIR__ . '/header.php';
                             <div class="reservation-item-heading">
                                 <div>
                                     <h3><?= e($reservation['subject_name']) ?></h3>
+                                    <?php if ($isAdmin): ?>
+                                        <p class="reservation-professor">
+                                            Professor: <?= e($reservation['professor_name']) ?>
+                                        </p>
+                                    <?php endif; ?>
                                     <p class="reservation-room">
                                         Classroom <?= e($reservation['room_code']) ?>
                                     </p>

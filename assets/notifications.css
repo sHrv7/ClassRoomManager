@@ -391,6 +391,126 @@
     margin-bottom: 18px;
 }
 
+.notification-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+
+.notification-filters select {
+    min-width: 190px;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+}
+
+.notification-filters select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--paper);
+}
+
+.notification-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.pagination-button,
+.pagination-number {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    transition: background .2s ease, color .2s ease;
+}
+
+.pagination-button:hover,
+.pagination-number:hover {
+    background: var(--paper);
+    border-color: var(--green);
+}
+
+.pagination-number.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+}
+
+.notification-search {
+    flex: 1;
+    min-width: 220px;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+}
+
+.notification-search:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(0, 120, 70, 0.1);
+}
+
+.notification-search::placeholder {
+    color: var(--muted);
+}
+
+@media (max-width: 600px) {
+    .notification-search {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .notification-pagination {
+        gap: 7px;
+    }
+
+    .pagination-button {
+        font-size: 13px;
+        padding: 0 9px;
+    }
+}
+
+@media (max-width: 600px) {
+    .notification-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .notification-filters select,
+    .notification-filters .button {
+        width: 100%;
+    }
+}
+
 @media (max-width: 600px) {
     .notification-detail-header {
         flex-direction: column;
