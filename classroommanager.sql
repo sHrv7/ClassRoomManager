@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 21, 2026 at 01:54 AM
--- Server version: 8.0.36
--- PHP Version: 8.0.30
+-- Generation Time: Nov 24, 2026 at 07:09 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -28,8 +28,8 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `categories` (
-  `id` int NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -48,9 +48,9 @@ INSERT INTO `categories` (`id`, `name`) VALUES
 --
 
 CREATE TABLE `classrooms` (
-  `id` int NOT NULL,
-  `room_code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `capacity` int NOT NULL
+  `id` int(11) NOT NULL,
+  `room_code` varchar(30) NOT NULL,
+  `capacity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -60,8 +60,8 @@ CREATE TABLE `classrooms` (
 INSERT INTO `classrooms` (`id`, `room_code`, `capacity`) VALUES
 (1, 'A101', 50),
 (2, 'A102', 35),
-(3, 'B202', 60),
-(4, 'C105', 30);
+(4, 'C105', 30),
+(5, 'B202', 60);
 
 -- --------------------------------------------------------
 
@@ -70,14 +70,14 @@ INSERT INTO `classrooms` (`id`, `room_code`, `capacity`) VALUES
 --
 
 CREATE TABLE `notifications` (
-  `id` int NOT NULL,
-  `subject_id` int DEFAULT NULL,
-  `professor_id` int NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `category_id` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `subject_id` int(11) DEFAULT NULL,
+  `professor_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `image` varchar(255) DEFAULT NULL,
+  `category_id` int(11) NOT NULL,
   `is_draft` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -85,21 +85,42 @@ CREATE TABLE `notifications` (
 -- Dumping data for table `notifications`
 --
 
-INSERT INTO `notifications` (`id`, `subject_id`, `professor_id`, `title`, `message`, `created_at`, `image`, `category_id`) VALUES
-(19, 2, 3, 'Predavanje otkazano', 'Predavanje iz predmeta Programming u učionici A101 na datum 19.11.2026 20:25 je otkazano.', '2026-11-18 16:33:38', NULL, 2),
-(21, 1, 3, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Mathematics\", učionica: A101, početak: 18.11.2026 17:46.\nasd', '2026-11-18 16:46:24', NULL, 2),
-(22, 2, 3, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Mathematics → Programming\n- Učionica: A101 → B202\n- Početak: 18.11.2026 17:46\n- Završetak: 18.11.2026 20:46\n- Napomene: asd → asdaaaa', '2026-11-18 16:56:03', NULL, 2),
-(25, 4, 3, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Web Design\n- Učionica: A101\n- Početak: 19.11.2026 07:30 → 19.11.2026 08:30\n- Završetak: 19.11.2026 08:30 → 19.11.2026 09:30\n- Napomene: asd', '2026-11-18 17:03:37', NULL, 2),
-(26, 3, 3, 'Nova vijest', 'Ayoo', '2026-11-19 22:29:56', 'uploads/announcements/21ebe659bf217f1f206eababfcf95907.jpg', 2),
-(27, 3, 3, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Databases\", učionica: A101, početak: 24.11.2026 09:50.\nNapomene: Novi sat', '2026-11-19 22:51:27', NULL, 2),
-(28, NULL, 3, 'asdaaaaaa', '<p>asd</p>', '2026-11-19 22:53:32', 'uploads/announcements/e85bb0c3cd797897afecb5f9e80e0088.jpg', 1),
-(29, 2, 3, 'asasdasdasd', 'asdasdasd', '2026-11-19 22:54:34', 'uploads/announcements/1e21fb8a44f7ed219d7dbe1e1cbce06f.jpg', 3),
-(30, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: B202, početak: 17.11.2026 12:00.\nNapomene: ', '2026-11-20 13:58:15', NULL, 2),
-(31, 5, 4, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Linux Basics\n- Učionica: B202\n- Početak: 24.11.2026 12:00\n- Završetak: 24.11.2026 15:00\n- Napomene: Bez napomena → Grupe za labose', '2026-11-20 14:04:17', NULL, 2),
-(32, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici B202 na datum 24.11.2026 12:00 je otkazano.', '2026-11-20 14:05:04', NULL, 2),
-(33, NULL, 4, 'Dodan je Rich Text editor', '<h1>Ovo je heading 1</h1><p><strong>Ovo bold</strong></p><h2>Ovo je heading 2</h2><p><em>Ovo italic</em></p><p><u>Ovo underline</u></p><p><s>Ovo je line kroz</s></p><p><br></p><p>Lista:</p><ol><li>lista 1</li><li>lista 2</li><li>lista 3</li></ol><p><br></p><p>Bulletsi:</p><ul><li>bullet 1</li><li>bullet 2</li><li>bullet 3</li></ul><p><br></p><blockquote>ovo je quote</blockquote><p><br></p><p><a href=\"https://github.com/sHrv7/ClassRoomManager\">ovo je veza</a></p><p><br></p><blockquote><strong><em><s><u>ovo je sve</u></s></em></strong></blockquote><p><br></p><p>a ovo normal text</p>', '2026-11-20 14:18:43', NULL, 1),
-(35, NULL, 3, 'Proba', '<p>Proba</p>', '2026-11-20 18:20:17', NULL, 1),
-(36, NULL, 3, 'Probna vijest', '<p>Ovo je probna vijest</p>', '2026-11-21 00:09:59', 'uploads/announcements/c2a4329f17e373a23c73d51d49a59bd6.jpg', 1);
+INSERT INTO `notifications` (`id`, `subject_id`, `professor_id`, `title`, `message`, `created_at`, `image`, `category_id`, `is_draft`) VALUES
+(19, 2, 3, 'Predavanje otkazano', 'Predavanje iz predmeta Programming u učionici A101 na datum 19.11.2026 20:25 je otkazano.', '2026-11-18 16:33:38', NULL, 2, 0),
+(21, 1, 3, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Mathematics\", učionica: A101, početak: 18.11.2026 17:46.\nasd', '2026-11-18 16:46:24', NULL, 2, 0),
+(22, 2, 3, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Mathematics → Programming\n- Učionica: A101 → B202\n- Početak: 18.11.2026 17:46\n- Završetak: 18.11.2026 20:46\n- Napomene: asd → asdaaaa', '2026-11-18 16:56:03', NULL, 2, 0),
+(25, 4, 3, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Web Design\n- Učionica: A101\n- Početak: 19.11.2026 07:30 → 19.11.2026 08:30\n- Završetak: 19.11.2026 08:30 → 19.11.2026 09:30\n- Napomene: asd', '2026-11-18 17:03:37', NULL, 2, 0),
+(26, 3, 3, 'Nova vijest', 'Ayoo', '2026-11-19 22:29:56', 'uploads/announcements/21ebe659bf217f1f206eababfcf95907.jpg', 2, 0),
+(27, 3, 3, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Databases\", učionica: A101, početak: 24.11.2026 09:50.\nNapomene: Novi sat', '2026-11-19 22:51:27', NULL, 2, 0),
+(28, NULL, 3, 'asdaaaaaa', '<p>asd</p>', '2026-11-19 22:53:32', 'uploads/announcements/e85bb0c3cd797897afecb5f9e80e0088.jpg', 1, 0),
+(29, 2, 3, 'asasdasdasd', 'asdasdasd', '2026-11-19 22:54:34', 'uploads/announcements/1e21fb8a44f7ed219d7dbe1e1cbce06f.jpg', 3, 0),
+(30, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: B202, početak: 17.11.2026 12:00.\nNapomene: ', '2026-11-20 13:58:15', NULL, 2, 0),
+(31, 5, 4, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Linux Basics\n- Učionica: B202\n- Početak: 24.11.2026 12:00\n- Završetak: 24.11.2026 15:00\n- Napomene: Bez napomena → Grupe za labose', '2026-11-20 14:04:17', NULL, 2, 0),
+(32, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici B202 na datum 24.11.2026 12:00 je otkazano.', '2026-11-20 14:05:04', NULL, 2, 0),
+(33, NULL, 4, 'Dodan je Rich Text editor', '<h1>Ovo je heading 1</h1><p><strong>Ovo bold</strong></p><h2>Ovo je heading 2</h2><p><em>Ovo italic</em></p><p><u>Ovo underline</u></p><p><s>Ovo je line kroz</s></p><p><br></p><p>Lista:</p><ol><li>lista 1</li><li>lista 2</li><li>lista 3</li></ol><p><br></p><p>Bulletsi:</p><ul><li>bullet 1</li><li>bullet 2</li><li>bullet 3</li></ul><p><br></p><blockquote>ovo je quote</blockquote><p><br></p><p><a href=\"https://github.com/sHrv7/ClassRoomManager\">ovo je veza</a></p><p><br></p><blockquote><strong><em><s><u>ovo je sve</u></s></em></strong></blockquote><p><br></p><p>a ovo normal text</p>', '2026-11-20 14:18:43', NULL, 1, 0),
+(35, NULL, 3, 'Proba', '<p>Proba</p>', '2026-11-20 18:20:17', NULL, 1, 0),
+(36, NULL, 3, 'Probna vijest', '<p>Ovo je probna vijest</p>', '2026-11-21 00:09:59', 'uploads/announcements/c2a4329f17e373a23c73d51d49a59bd6.jpg', 1, 0),
+(37, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: A101, početak: 26.11.2026 15:55.\nNapomene: Predavanje', '2026-11-24 14:55:53', NULL, 2, 0),
+(38, 5, 1, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Linux Basics\n- Učionica: A101\n- Početak: 26.11.2026 15:55 → 27.11.2026 15:55\n- Završetak: 26.11.2026 17:55 → 27.11.2026 17:55\n- Napomene: Predavanje → Predavanje 2', '2026-11-24 14:56:52', NULL, 2, 0),
+(39, 5, 1, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 27.11.2026 15:55 je otkazano.', '2026-11-24 14:58:54', NULL, 2, 0),
+(40, 3, 1, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Databases\", učionica: A102, početak: 30.11.2026 17:00.\nOčekivani broj studenata: 35.\nNapomene: Test previse', '2026-11-24 15:17:57', NULL, 2, 0),
+(41, 3, 1, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Databases\n- Učionica: A101\n- Početak: 25.11.2026 10:00\n- Završetak: 25.11.2026 11:00\n- Napomene: Predavanje\n- Očekivani broj studenata: nije unesen → 45', '2026-11-24 15:18:33', NULL, 2, 0),
+(42, 3, 1, 'Predavanje otkazano', 'Predavanje iz predmeta Databases u učionici A102 na datum 30.11.2026 17:00 je otkazano.', '2026-11-24 15:18:52', NULL, 2, 0),
+(43, 1, 1, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Mathematics\n- Učionica: A101\n- Početak: 25.11.2026 11:30\n- Završetak: 25.11.2026 12:45\n- Napomene: Kolokvij\n- Očekivani broj studenata: nije unesen → 50', '2026-11-24 15:19:05', NULL, 2, 0),
+(44, 4, 1, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Web Design\n- Učionica: A101\n- Početak: 26.11.2026 08:30\n- Završetak: 26.11.2026 09:30\n- Napomene: asd\n- Očekivani broj studenata: nije unesen → 40', '2026-11-24 15:19:28', NULL, 2, 0),
+(45, 3, 1, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Databases\n- Učionica: A101\n- Početak: 27.11.2026 09:50\n- Završetak: 27.11.2026 10:50\n- Napomene: Novi sat\n- Očekivani broj studenata: nije unesen → 45', '2026-11-24 15:19:44', NULL, 2, 0),
+(46, 1, 1, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Mathematics\n- Učionica: C105\n- Početak: 27.11.2026 12:15\n- Završetak: 27.11.2026 13:30\n- Napomene: Obavezno predavanje\n- Očekivani broj studenata: nije unesen → 20', '2026-11-24 15:20:05', NULL, 2, 0),
+(50, NULL, 4, 'test', '<p>test</p>', '2026-11-24 16:57:34', NULL, 1, 0),
+(51, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: A101, početak: 27.11.2026 18:30.\nOčekivani broj studenata: 50.\nNapomene: Test', '2026-11-24 17:32:01', NULL, 2, 0),
+(52, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 27.11.2026 18:30 je otkazano.', '2026-11-24 17:33:01', NULL, 2, 0),
+(53, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: A101, početak: 27.11.2026 18:30.\nOčekivani broj studenata: 50.\nNapomene: test', '2026-11-24 17:33:27', NULL, 2, 0),
+(54, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 27.11.2026 18:30 je otkazano.', '2026-11-24 17:35:04', NULL, 2, 0),
+(55, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: A101, početak: 27.11.2026 15:35.\nOčekivani broj studenata: 50.\nNapomene: Predavanje test', '2026-11-24 17:35:35', NULL, 2, 0),
+(56, NULL, 4, 'Test Email JS servisa', '<p>Svi koji imaju student rolu bi trebali dobiti ovaj email</p>', '2026-11-24 17:37:16', NULL, 1, 0),
+(57, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 27.11.2026 15:35 je otkazano.', '2026-11-24 18:01:20', NULL, 2, 0),
+(58, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: A101, početak: 26.11.2026 15:00.\nOčekivani broj studenata: 35.\nNapomene: Kolokvij', '2026-11-24 18:02:13', NULL, 2, 0),
+(59, 5, 4, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Očekivani broj studenata: 35 → 50', '2026-11-24 18:03:06', NULL, 2, 0),
+(60, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 26.11.2026 15:00 je otkazano.', '2026-11-24 18:03:20', NULL, 2, 0);
 
 -- --------------------------------------------------------
 
@@ -108,27 +129,26 @@ INSERT INTO `notifications` (`id`, `subject_id`, `professor_id`, `title`, `messa
 --
 
 CREATE TABLE `reservations` (
-  `id` int NOT NULL,
-  `classroom_id` int NOT NULL,
-  `subject_id` int NOT NULL,
-  `expected_students` int unsigned DEFAULT NULL,
-  `user_id` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `classroom_id` int(11) NOT NULL,
+  `subject_id` int(11) NOT NULL,
+  `expected_students` int(10) UNSIGNED DEFAULT NULL,
+  `user_id` int(11) NOT NULL,
   `starts_at` datetime NOT NULL,
   `ends_at` datetime NOT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci
+  `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `reservations`
 --
 
-INSERT INTO `reservations` (`id`, `classroom_id`, `subject_id`, `user_id`, `starts_at`, `ends_at`, `notes`) VALUES
-(1, 1, 3, 1, '2026-11-18 10:00:00', '2026-11-18 11:00:00', 'Predavanje'),
-(2, 4, 1, 3, '2026-11-20 12:15:00', '2026-11-20 13:30:00', 'Obavezno predavanje'),
-(4, 1, 1, 3, '2026-11-18 11:30:00', '2026-11-18 12:45:00', 'Kolokvij'),
-(8, 1, 4, 3, '2026-11-19 08:30:00', '2026-11-19 09:30:00', 'asd'),
-(9, 3, 2, 3, '2026-11-20 13:30:00', '2026-11-20 14:15:00', 'asdaaaa'),
-(10, 1, 3, 3, '2026-11-24 09:50:00', '2026-11-24 10:50:00', 'Novi sat');
+INSERT INTO `reservations` (`id`, `classroom_id`, `subject_id`, `expected_students`, `user_id`, `starts_at`, `ends_at`, `notes`) VALUES
+(1, 1, 3, 45, 1, '2026-11-25 10:00:00', '2026-11-25 11:00:00', 'Predavanje'),
+(2, 4, 1, 20, 3, '2026-11-27 12:15:00', '2026-11-27 13:30:00', 'Obavezno predavanje'),
+(4, 1, 1, 50, 3, '2026-11-25 11:30:00', '2026-11-25 12:45:00', 'Kolokvij'),
+(8, 1, 4, 40, 3, '2026-11-26 08:30:00', '2026-11-26 09:30:00', 'asd'),
+(10, 1, 3, 45, 3, '2026-11-27 09:50:00', '2026-11-27 10:50:00', 'Novi sat');
 
 -- --------------------------------------------------------
 
@@ -137,8 +157,8 @@ INSERT INTO `reservations` (`id`, `classroom_id`, `subject_id`, `user_id`, `star
 --
 
 CREATE TABLE `subjects` (
-  `id` int NOT NULL,
-  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL
+  `id` int(11) NOT NULL,
+  `name` varchar(150) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -159,12 +179,12 @@ INSERT INTO `subjects` (`id`, `name`) VALUES
 --
 
 CREATE TABLE `users` (
-  `id` int NOT NULL,
-  `Username` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
-  `Email` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
-  `Password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `Role` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Student',
-  `Active` tinyint(1) NOT NULL DEFAULT '1'
+  `id` int(11) NOT NULL,
+  `Username` varchar(150) NOT NULL,
+  `Email` varchar(150) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `Role` varchar(50) NOT NULL DEFAULT 'Student',
+  `Active` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -172,10 +192,11 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `Username`, `Email`, `Password`, `Role`, `Active`) VALUES
-(1, 'Hrvoje Sic', 'hrvoje.sic@gmail.com', '$2y$10$O6opMF/DeyuPP7kq7CtZou5kqJ.XdxFfn85.snWEgn/4HltBoOIke', 'Admin', 1),
+(1, 'Hrvoje Sic', 'hrvoje.sic@gmail.com', '$2y$10$O6opMF/DeyuPP7kq7CtZou5kqJ.XdxFfn85.snWEgn/4HltBoOIke', 'Student', 1),
 (2, 'test korisnik', 'test@gmail.com', '$2y$10$nKJnEliKZ9N7YDozFRUhXe7k6XxPEBfVoBu501f1VdvIkKpRX9o4O', 'Student', 1),
 (3, 'Gvido Maskalan', 'gvido.maskalan@gmail.com', '$2y$10$1VzDwnRLFMMkYnCb7mEEkOZBuKfPoZavMjPwlb/P9L8qkbLSeR4Cu', 'Professor', 1),
-(4, 'Test Profesor', 'test.profesor@gmail.com', '$2y$10$MQCfZcsmIuXRea29kcJCjO3InFj/FhQO8IOVGQy.z0E/TRLkZoaxe', 'Professor', 1);
+(4, 'Test Profesor', 'test.profesor@gmail.com', '$2y$10$MQCfZcsmIuXRea29kcJCjO3InFj/FhQO8IOVGQy.z0E/TRLkZoaxe', 'Professor', 1),
+(5, 'test admin', 'test.admin@gmail.com', '$2y$10$lsgcQ71VzdRXxCVBIJfajOsx2hTUgnUvSWsnIHgtPmJDGoJpW9Y5m', 'Admin', 1);
 
 -- --------------------------------------------------------
 
@@ -184,8 +205,8 @@ INSERT INTO `users` (`id`, `Username`, `Email`, `Password`, `Role`, `Active`) VA
 --
 
 CREATE TABLE `user_subjects` (
-  `user_id` int NOT NULL,
-  `subject_id` int NOT NULL
+  `user_id` int(11) NOT NULL,
+  `subject_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -193,11 +214,14 @@ CREATE TABLE `user_subjects` (
 --
 
 INSERT INTO `user_subjects` (`user_id`, `subject_id`) VALUES
+(1, 5),
 (2, 1),
-(3, 1),
-(1, 2),
-(3, 2),
+(2, 2),
 (2, 3),
+(2, 4),
+(2, 5),
+(3, 1),
+(3, 2),
 (3, 3),
 (3, 4),
 (4, 5);
@@ -265,37 +289,37 @@ ALTER TABLE `user_subjects`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `classrooms`
 --
 ALTER TABLE `classrooms`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
@@ -328,37 +352,3 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
--- Idempotent migration for an existing database; legacy reservations remain unknown (NULL).
-SET @expected_students_exists = (
-  SELECT COUNT(*)
-  FROM INFORMATION_SCHEMA.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'reservations'
-    AND COLUMN_NAME = 'expected_students'
-);
-SET @expected_students_migration = IF(
-  @expected_students_exists = 0,
-  'ALTER TABLE `reservations` ADD COLUMN `expected_students` int unsigned DEFAULT NULL AFTER `subject_id`',
-  'SELECT 1'
-);
-PREPARE expected_students_statement FROM @expected_students_migration;
-EXECUTE expected_students_statement;
-DEALLOCATE PREPARE expected_students_statement;
-
--- Idempotent migration for drafts; existing notifications remain published (0).
-SET @is_draft_exists = (
-  SELECT COUNT(*)
-  FROM INFORMATION_SCHEMA.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'notifications'
-    AND COLUMN_NAME = 'is_draft'
-);
-SET @is_draft_migration = IF(
-  @is_draft_exists = 0,
-  'ALTER TABLE `notifications` ADD COLUMN `is_draft` tinyint(1) NOT NULL DEFAULT 0',
-  'SELECT 1'
-);
-PREPARE is_draft_statement FROM @is_draft_migration;
-EXECUTE is_draft_statement;
-DEALLOCATE PREPARE is_draft_statement;
