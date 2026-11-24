@@ -77,7 +77,14 @@
                 <small class="muted">JPG, PNG, WEBP ili GIF. Maksimalna veličina: 5 MB.</small>
             </div>
 
-            <button type="submit" class="button button-primary"><?= e($formSubmitLabel) ?></button>
+            <div class="post-form-actions">
+                <button type="submit" name="post_action" value="draft" class="button button-secondary" formnovalidate>
+                    Spremi nacrt
+                </button>
+                <button type="submit" name="post_action" value="publish" class="button button-primary">
+                    <?= e($formSubmitLabel) ?>
+                </button>
+            </div>
         </form>
 
         <?php if ($formNotificationId !== null): ?>
@@ -133,6 +140,12 @@ if (messageInput.value.trim() !== '') {
 messageInput.hidden = true;
 messageInput.required = false;
 messageInput.form.addEventListener('submit', (event) => {
+    messageInput.value = quill.root.innerHTML;
+    if (event.submitter && event.submitter.value === 'draft') {
+        messageError.textContent = '';
+        return;
+    }
+
     if (quill.getText().trim() === '') {
         event.preventDefault();
         messageError.textContent = 'Tekst obavijesti je obavezan.';
@@ -140,7 +153,6 @@ messageInput.form.addEventListener('submit', (event) => {
         return;
     }
     messageError.textContent = '';
-    messageInput.value = quill.root.innerHTML;
 });
 
 categorySelect.addEventListener('change', updateSubjectField);

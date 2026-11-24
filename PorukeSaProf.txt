@@ -1,56 +1,49 @@
-projekt je zamišljen kao aplikacija koja fakultetu omogućuje jednostavno upravljanje učionicama i rezervacijama predavanja.
-Postojale bi tri glavne uloge: administrator, profesor i student.
- 
 Administrator
-Pregledava, uređuje i otkazuje rezervacije.
-Briše učionice koje se više ne koriste.
-Uređuje podatke o učionicama, primjerice kapacitet i oznaku prostorije.
-Dodaje nove učionice.
+[x] Pregledava, uređuje i otkazuje rezervacije.
+[x] Briše učionice koje se više ne koriste.
+[x] Uređuje podatke o učionicama, primjerice kapacitet i oznaku prostorije.
+[x] Dodaje nove učionice.
  
 Profesor
 [x] Pregledava i otkazuje vlastite rezervacije.
 [x] Rezervira odgovarajuću slobodnu učionicu.
-Unosi očekivani broj studenata.
+[x] Unosi očekivani broj studenata.
 [x] Odabire predmet, datum i termin predavanja.
-Pregledava dostupne učionice.
+[x] Pregledava dostupne učionice.
  
 Student
 [x] Vidi dodijeljenu učionicu i vrijeme održavanja predavanja.
 [x] Filtrira raspored prema predmetu, datumu ili profesoru.
-Pregledava raspored predavanja putem aplikacije ili API-ja.
 
 
-
-
-
-
-Poštovani kolega,
-tema je prikladna za projekt i možete je razvijati u predloženom smjeru.
-Podjela na administratora, profesora i studenta ima smisla, a navedene funkcionalnosti predstavljaju dobru osnovu.
 
 Uz rezervacije učionica potrebno je uključiti i obavezne elemente iz uputa za projekt:
+
+
 [x] Javni dio aplikacije i modul vijesti ili obavijesti, 
 [x] primjerice obavijesti o promjenama rasporeda i otkazivanju predavanja.
-Potrebni su popis i detalji obavijesti, kategorije, pretraživanje i straničenje.
-CMS za upravljanje obavijestima i kategorijama.
+[x] Potrebni su popis i detalji obavijesti, kategorije, pretraživanje i straničenje.
+[x] CMS za upravljanje obavijestima i kategorijama.
+[x] Administracija kategorija: dodavanje, preimenovanje i sigurno brisanje nekorištenih kategorija.
 [x] Uređivač obogaćenog teksta, dodavanje/zamjena/uklanjanje slika te stvaranje, objavljivanje, uređivanje i brisanje obavijesti.
-Preostalo: spremanje nacrta i administracija kategorija.
 [x] Registracija, prijava, odjava, korisnički profil i promjena lozinke.
 [x] Administrator mora upravljati korisnicima, njihovim ulogama te aktivacijom i deaktivacijom računa.
 [x] Profesor može preuzeti ovlasti urednika za vlastite obavijesti, 
 [x] a student ovlasti osnovnog registriranog korisnika.
-Backend u PHP-u i relacijska baza podataka, uz ER dijagram, provjeru unosa i 
-zaštitu pristupa prema ovlastima.
+[x] Backend u PHP-u i relacijska baza podataka, uz provjeru unosa i zaštitu pristupa prema ovlastima.
+Izraditi ER dijagram.
 Vlastiti REST API u JSON ili XML formatu.
 Sam dohvat rasporeda nije dovoljan: potrebno je omogućiti i propisane operacije nad 
 obavijestima i dohvat kategorija, uz provjeru ovlasti za izmjene.
 Dio aplikacije mora stvarno koristiti taj API, a potrebno je demonstrirati i validaciju 
 zahtjeva prema JSON Schemi ili XSD-u.
-Povezivanje s najmanje jednim vanjskim API-jem koji ima smislenu primjenu u projektu, 
+[x] Povezivanje s najmanje jednim vanjskim API-jem koji ima smislenu primjenu u projektu,
 uz obradu nedostupnosti servisa i neispravnih odgovora.
-Za samu rezervaciju učionica vodite računa o sprječavanju preklapanja termina i 
-provjeri odgovara li kapacitet učionice očekivanom broju studenata.
-Profesor smije upravljati samo vlastitim rezervacijama, dok administrator može upravljati svima.
+[x] Pri rezervaciji sprječava se preklapanje termina.
+[x] Provjeriti odgovara li kapacitet učionice očekivanom broju studenata.
+[x] Profesor smije upravljati samo vlastitim rezervacijama, dok administrator može upravljati svima.
+
+
 Potrebno je također redovito pratiti razvoj kroz GitHub te pripremiti dokumentaciju, 
 testne scenarije, seminarski rad i prezentaciju prema uputama.
 

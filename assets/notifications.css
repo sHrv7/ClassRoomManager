@@ -604,3 +604,13 @@
         justify-content: space-between;
     }
 }
+
+.notification-draft-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 3px 7px;
+    background: #fff0d6;
+    color: #704b0d;
+    font: 700 11px/1.4 "Trebuchet MS", "Segoe UI", sans-serif;
+    vertical-align: middle;
+}

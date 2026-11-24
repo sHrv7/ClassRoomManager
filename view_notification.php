@@ -24,6 +24,7 @@ $stmt = db()->prepare("
         n.message,
         n.created_at,
         n.image,
+        n.is_draft,
         c.name AS category_name,
         u.username AS professor_name
     FROM notifications n
@@ -39,6 +40,11 @@ $stmt = db()->prepare("
           OR :is_admin = 1
           OR n.professor_id = :author_id
       )
+      AND (
+          n.is_draft = 0
+          OR :is_admin_draft = 1
+          OR n.professor_id = :draft_author_id
+      )
     LIMIT 1
 ");
 
@@ -46,7 +52,9 @@ $stmt->execute([
     'user_id' => $userId,
     'notification_id' => $notificationId,
     'is_admin' => $isAdmin ? 1 : 0,
-    'author_id' => $userId
+    'author_id' => $userId,
+    'is_admin_draft' => $isAdmin ? 1 : 0,
+    'draft_author_id' => $userId,
 ]);
 
 $notification = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -84,7 +92,10 @@ require __DIR__ . '/header.php';
             <div class="notification-detail-heading">
 
                 <div class="notification-detail-title-row">
-                    <h1><?= e($notification['title']) ?></h1>
+                    <h1><?= e($notification['title'] !== '' ? $notification['title'] : 'Nacrt bez naslova') ?></h1>
+                    <?php if ((int) $notification['is_draft'] === 1): ?>
+                        <span class="notification-draft-badge">Nacrt</span>
+                    <?php endif; ?>
 
                     <span class="notification-detail-date">
                         <?= date('d.m.Y. H:i', strtotime($notification['created_at'])) ?>

@@ -126,6 +126,12 @@
     font-weight: 700;
 }
 
+.reservation-capacity {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
 .reservation-meta {
     display: grid;
     grid-template-columns: 1fr 1fr;

@@ -10,7 +10,9 @@ $userId = $user['id'] ?? $user['ID'] ?? null;
 $isProfessor = ($user['Role'] ?? '') === 'Professor';
 $isAdmin = ($user['Role'] ?? '') === 'Admin';
 $notice = (string) ($_SESSION['notification_notice'] ?? '');
+$noticeType = (string) ($_SESSION['notification_notice_type'] ?? 'success');
 unset($_SESSION['notification_notice']);
+unset($_SESSION['notification_notice_type']);
 
 if (!$userId) {
     exit('User ID not found.');
@@ -27,6 +29,7 @@ $stmt = db()->prepare("
         n.created_at,
         n.image,
         n.category_id,
+        n.is_draft,
         c.name AS category_name,
         s.name AS subject_name,
         u.username AS professor_name
@@ -43,6 +46,11 @@ $stmt = db()->prepare("
         OR :is_admin = 1
         OR n.professor_id = :author_id
     )
+    AND (
+        n.is_draft = 0
+        OR :is_admin_draft = 1
+        OR n.professor_id = :draft_author_id
+    )
     ORDER BY n.created_at DESC
 ");
 
@@ -50,6 +58,8 @@ $stmt->execute([
     'user_id' => $userId,
     'is_admin' => $isAdmin ? 1 : 0,
     'author_id' => $userId,
+    'is_admin_draft' => $isAdmin ? 1 : 0,
+    'draft_author_id' => $userId,
 ]);
 
 $allNotifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -152,7 +162,9 @@ require __DIR__ . '/header.php';
 <main class="page-shell notifications-page">
 
     <?php if ($notice !== ''): ?>
-        <p class="success-message" role="status"><?= e($notice) ?></p>
+        <p class="<?= $noticeType === 'error' ? 'notice notice-error' : 'notice notice-success' ?>" role="status">
+            <?= e($notice) ?>
+        </p>
     <?php endif; ?>
 
     <div class="notifications-heading">
@@ -252,7 +264,12 @@ require __DIR__ . '/header.php';
                 >
                     <div class="notification-card-top">
                         <div>
-                            <h2><?= e($notification['title']) ?></h2>
+                            <h2>
+                                <?= e($notification['title'] !== '' ? $notification['title'] : 'Nacrt bez naslova') ?>
+                                <?php if ((int) $notification['is_draft'] === 1): ?>
+                                    <span class="notification-draft-badge">Nacrt</span>
+                                <?php endif; ?>
+                            </h2>
 
                             <p class="notification-category">
                                 <?= e($notification['category_name'] ?? 'Bez kategorije') ?>

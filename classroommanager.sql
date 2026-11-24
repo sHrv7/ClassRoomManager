@@ -77,7 +77,8 @@ CREATE TABLE `notifications` (
   `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `category_id` int NOT NULL
+  `category_id` int NOT NULL,
+  `is_draft` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -110,6 +111,7 @@ CREATE TABLE `reservations` (
   `id` int NOT NULL,
   `classroom_id` int NOT NULL,
   `subject_id` int NOT NULL,
+  `expected_students` int unsigned DEFAULT NULL,
   `user_id` int NOT NULL,
   `starts_at` datetime NOT NULL,
   `ends_at` datetime NOT NULL,
@@ -326,3 +328,37 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- Idempotent migration for an existing database; legacy reservations remain unknown (NULL).
+SET @expected_students_exists = (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'reservations'
+    AND COLUMN_NAME = 'expected_students'
+);
+SET @expected_students_migration = IF(
+  @expected_students_exists = 0,
+  'ALTER TABLE `reservations` ADD COLUMN `expected_students` int unsigned DEFAULT NULL AFTER `subject_id`',
+  'SELECT 1'
+);
+PREPARE expected_students_statement FROM @expected_students_migration;
+EXECUTE expected_students_statement;
+DEALLOCATE PREPARE expected_students_statement;
+
+-- Idempotent migration for drafts; existing notifications remain published (0).
+SET @is_draft_exists = (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'notifications'
+    AND COLUMN_NAME = 'is_draft'
+);
+SET @is_draft_migration = IF(
+  @is_draft_exists = 0,
+  'ALTER TABLE `notifications` ADD COLUMN `is_draft` tinyint(1) NOT NULL DEFAULT 0',
+  'SELECT 1'
+);
+PREPARE is_draft_statement FROM @is_draft_migration;
+EXECUTE is_draft_statement;
+DEALLOCATE PREPARE is_draft_statement;

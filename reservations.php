@@ -21,7 +21,10 @@ $pdo = db();
 $pageTitle = 'My reservations';
 
 $error = '';
-$success = '';
+$success = (string) ($_SESSION['reservation_notice'] ?? '');
+$successType = (string) ($_SESSION['reservation_notice_type'] ?? 'success');
+unset($_SESSION['reservation_notice']);
+unset($_SESSION['reservation_notice_type']);
 
 function reservation_redirect(): void {
     redirect('reservations.php');
@@ -47,6 +50,24 @@ function create_reservation_notification(
         'title' => $title,
         'message' => $message
     ]);
+
+    $delivery = send_notification_emails([
+        'subject_id' => $subjectId,
+        'professor_id' => $professorId,
+        'title' => $title,
+        'message' => $message,
+    ]);
+    $_SESSION['reservation_notice'] = match ($delivery['status']) {
+        'sent' => 'Rezervacija je spremljena, a obavijest e-poštom poslana na '
+            . $delivery['count'] . ' studenata.',
+        'no_recipients' => 'Rezervacija je spremljena; nema aktivnih studenata za e-mail obavijest.',
+        'not_configured' => 'Rezervacija je spremljena, ali EmailJS nije konfiguriran.',
+        default => 'Rezervacija je spremljena, ali slanje e-mail obavijesti nije uspjelo: '
+            . ($delivery['reason'] ?? $delivery['status']),
+    };
+    $_SESSION['reservation_notice_type'] = in_array($delivery['status'], ['sent', 'no_recipients'], true)
+        ? 'success'
+        : 'error';
 }
 
 // Handle create, update and delete.
@@ -113,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 create_reservation_notification(
                     $pdo,
                     (int)$reservation['subject_id'],
-                    (int)$userId,
+                    (int)$reservation['user_id'],
                     'Predavanje otkazano',
                     'Predavanje iz predmeta ' . $subjectName . ' u učionici ' . $reservation['room_code'] .
                     ' na datum ' .
@@ -130,11 +151,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = (int)($_POST['reservation_id'] ?? 0);
             $classroomId = (int)($_POST['classroom_id'] ?? 0);
             $subjectId = (int)($_POST['subject_id'] ?? 0);
+            $expectedStudents = filter_var(
+                $_POST['expected_students'] ?? null,
+                FILTER_VALIDATE_INT,
+                ['options' => ['min_range' => 1]]
+            );
             $startsAt = str_replace('T', ' ', $_POST['starts_at'] ?? '');
             $endsAt = str_replace('T', ' ', $_POST['ends_at'] ?? '');
             $notes = trim($_POST['notes'] ?? '');
 
-            if (!$classroomId || !$subjectId || !$startsAt || !$endsAt) {
+            if (!$classroomId || !$subjectId || !$startsAt || !$endsAt || $expectedStudents === false) {
                 $error = 'Please complete all required fields.';
             } elseif (
                 strtotime($startsAt) === false ||
@@ -178,6 +204,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute(['classroom_id' => $classroomId]);
                     $classroomName = $stmt->fetchColumn();
 
+                    $stmt = $pdo->prepare('SELECT capacity FROM classrooms WHERE id = :classroom_id');
+                    $stmt->execute(['classroom_id' => $classroomId]);
+                    $classroomCapacity = (int) $stmt->fetchColumn();
+
+                    if ($expectedStudents > $classroomCapacity) {
+                        $error = 'Expected student count cannot exceed the classroom capacity of '
+                            . $classroomCapacity . '.';
+                    }
+
                     // Load the old reservation when editing.
                     $oldReservation = null;
 
@@ -191,6 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 r.starts_at,
                                 r.ends_at,
                                 r.notes,
+                                r.expected_students,
                                 r.user_id
                             FROM reservations r
                             JOIN subjects s ON s.id = r.subject_id
@@ -250,6 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         subject_id = :subject_id,
                                         starts_at = :starts_at,
                                         ends_at = :ends_at,
+                                        expected_students = :expected_students,
                                         notes = :notes
                                     WHERE id = :id
                                 ';
@@ -259,6 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     'subject_id' => $subjectId,
                                     'starts_at' => $startsAt,
                                     'ends_at' => $endsAt,
+                                    'expected_students' => $expectedStudents,
                                     'notes' => $notes,
                                     'id' => $id
                                 ];
@@ -274,56 +312,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 // Collect all changes into one notification.
                                 $changes = [];
 
-                                // Subject changed?
+                                // Record only fields that actually changed.
                                 if ((int)$oldReservation['subject_id'] !== $subjectId) {
                                     $changes[] = 'Predmet: ' .
                                         $oldReservation['subject_name'] .
                                         ' → ' . $subjectName;
                                 }
-                                else {
-                                    $changes[] = 'Predmet: ' .
-                                        $oldReservation['subject_name'];
-                                }
 
-                                // Classroom changed?
                                 if ((int)$oldReservation['classroom_id'] !== $classroomId) {
                                     $changes[] = 'Učionica: ' .
                                         $oldReservation['room_code'] .
                                         ' → ' . $classroomName;
                                 }
-                                else{
-                                    $changes[] = 'Učionica: ' .
-                                        $oldReservation['room_code'];
-                                }
 
-                                // Start time changed?
-                                if (
-                                    strtotime($oldReservation['starts_at']) !==
-                                    strtotime($startsAt)
-                                ) {
+                                if (strtotime($oldReservation['starts_at']) !== strtotime($startsAt)) {
                                     $changes[] = 'Početak: ' .
                                         date('d.m.Y H:i', strtotime($oldReservation['starts_at'])) .
                                         ' → ' .
                                         date('d.m.Y H:i', strtotime($startsAt));
                                 }
-                                else{
-                                    $changes[] = 'Početak: ' .
-                                        date('d.m.Y H:i', strtotime($oldReservation['starts_at']));
-                                }
 
-                                // End time changed?
-                                if (
-                                    strtotime($oldReservation['ends_at']) !==
-                                    strtotime($endsAt)
-                                ) {
+                                if (strtotime($oldReservation['ends_at']) !== strtotime($endsAt)) {
                                     $changes[] = 'Završetak: ' .
                                         date('d.m.Y H:i', strtotime($oldReservation['ends_at'])) .
                                         ' → ' .
                                         date('d.m.Y H:i', strtotime($endsAt));
-                                }
-                                else {
-                                    $changes[] = 'Završetak: ' .
-                                        date('d.m.Y H:i', strtotime($oldReservation['ends_at']));
                                 }
 
                                 // Notes changed?
@@ -334,11 +347,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $changes[] = 'Napomene: ' .
                                         $oldNotes . ' → ' . $newNotes;
                                 }
-                                else{
-                                    $oldNotes = $oldReservation['notes'] ?: 'Bez napomena';
 
-                                    $changes[] = 'Napomene: ' .
-                                        $oldNotes;
+                                if ($oldReservation['expected_students'] === null
+                                    || (int) $oldReservation['expected_students'] !== $expectedStudents) {
+                                    $changes[] = 'Očekivani broj studenata: '
+                                        . ($oldReservation['expected_students'] === null
+                                            ? 'nije unesen'
+                                            : (int) $oldReservation['expected_students'])
+                                        . ' → ' . $expectedStudents;
                                 }
 
                                 // Create notifications only if something changed.
@@ -351,20 +367,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     create_reservation_notification(
                                         $pdo,
                                         $subjectId,
-                                        (int)$userId,
+                                        (int)$oldReservation['user_id'],
                                         'Promjena rezervacije',
                                         $notificationMessage
                                     );
+                                } else {
+                                    $_SESSION['reservation_notice'] = 'Nema promjena; e-mail obavijest nije poslana.';
+                                    $_SESSION['reservation_notice_type'] = 'success';
                                 }
                             } else {
                                 // CREATE NEW RESERVATION.
                                 $stmt = $pdo->prepare('
                                     INSERT INTO reservations
                                         (user_id, classroom_id, subject_id,
-                                         starts_at, ends_at, notes)
+                                         starts_at, ends_at, expected_students, notes)
                                     VALUES
                                         (:user_id, :classroom_id, :subject_id,
-                                         :starts_at, :ends_at, :notes)
+                                         :starts_at, :ends_at, :expected_students, :notes)
                                 ');
 
                                 $stmt->execute([
@@ -373,6 +392,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     'subject_id' => $subjectId,
                                     'starts_at' => $startsAt,
                                     'ends_at' => $endsAt,
+                                    'expected_students' => $expectedStudents,
                                     'notes' => $notes
                                 ]);
 
@@ -385,7 +405,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     'Kreirana je nova rezervacija za predmet "' .
                                     $subjectName . '", učionica: ' .
                                     $classroomName . ', početak: ' .
-                                    date('d.m.Y H:i', strtotime($startsAt)) . ".\nNapomene: " . $notes
+                                    date('d.m.Y H:i', strtotime($startsAt)) . ".\nOčekivani broj studenata: "
+                                    . $expectedStudents . ".\nNapomene: " . $notes
                                 );
                             }
 
@@ -455,8 +476,10 @@ if ($isAdmin) {
             r.starts_at,
             r.ends_at,
             r.notes,
+            r.expected_students,
             s.name AS subject_name,
             c.room_code,
+            c.capacity,
             u.Username AS professor_name
         FROM reservations r
         JOIN subjects s ON s.id = r.subject_id
@@ -472,8 +495,10 @@ if ($isAdmin) {
             r.starts_at,
             r.ends_at,
             r.notes,
+            r.expected_students,
             s.name AS subject_name,
             c.room_code,
+            c.capacity,
             u.Username AS professor_name
         FROM reservations r
         JOIN subjects s ON s.id = r.subject_id
@@ -505,6 +530,12 @@ require __DIR__ . '/header.php';
             </p>
         </div>
     </div>
+
+    <?php if ($success): ?>
+        <div class="notice <?= $successType === 'error' ? 'notice-error' : 'notice-success' ?>" role="status">
+            <?= e($success) ?>
+        </div>
+    <?php endif; ?>
 
     <?php if ($error): ?>
         <div class="notice notice-error">
@@ -540,12 +571,22 @@ require __DIR__ . '/header.php';
                     <option value="">Choose a classroom</option>
                     <?php foreach ($classrooms as $classroom): ?>
                         <option value="<?= (int)$classroom['id'] ?>"
+                            data-capacity="<?= (int)$classroom['capacity'] ?>"
                             <?= (int)($editing['classroom_id'] ?? 0) === (int)$classroom['id'] ? 'selected' : '' ?>>
                             <?= e($classroom['room_code']) ?>
                             (Capacity: <?= (int)$classroom['capacity'] ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
+
+                  <label for="expected_students">Očekivani broj studenata</label>
+                  <input type="number"
+                      name="expected_students"
+                      id="expected_students"
+                      min="1"
+                      value="<?= e($_POST['expected_students'] ?? ($editing['expected_students'] ?? '')) ?>"
+                      required>
+                  <small id="capacity-hint" class="muted" aria-live="polite"></small>
 
                 <label for="starts_at">Start</label>
                 <input type="datetime-local"
@@ -605,6 +646,12 @@ require __DIR__ . '/header.php';
                                     <p class="reservation-room">
                                         Classroom <?= e($reservation['room_code']) ?>
                                     </p>
+                                    <p class="reservation-capacity">
+                                        <?= $reservation['expected_students'] === null
+                                            ? 'Expected student count not recorded'
+                                            : 'Expected students: ' . (int) $reservation['expected_students']
+                                                . ' / capacity: ' . (int) $reservation['capacity'] ?>
+                                    </p>
                                 </div>
                             </div>
 
@@ -657,5 +704,27 @@ require __DIR__ . '/header.php';
 
     </div>
 </section>
+
+<script>
+const classroomSelect = document.getElementById('classroom_id');
+const expectedStudentsInput = document.getElementById('expected_students');
+const capacityHint = document.getElementById('capacity-hint');
+
+function updateExpectedStudentLimit() {
+    const selectedOption = classroomSelect.options[classroomSelect.selectedIndex];
+    if (!selectedOption || !selectedOption.dataset.capacity) {
+        expectedStudentsInput.removeAttribute('max');
+        capacityHint.textContent = '';
+        return;
+    }
+
+    const capacity = selectedOption.dataset.capacity;
+    expectedStudentsInput.max = capacity;
+    capacityHint.textContent = `Kapacitet odabrane učionice: ${capacity}.`;
+}
+
+classroomSelect.addEventListener('change', updateExpectedStudentLimit);
+updateExpectedStudentLimit();
+</script>
 
 <?php require __DIR__ . '/footer.php'; ?>

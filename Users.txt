@@ -1,3 +1,4 @@
-Email                           Pass
-test@gmail.com                  test1234
-test.profesor@gmail.com         test1234
+Email                           Pass                Role
+test@gmail.com                  test1234            Student
+test.profesor@gmail.com         test1234            Profesor
+test.admin@gmail.com            test1234            Admin

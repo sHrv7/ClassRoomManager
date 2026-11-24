@@ -32,6 +32,7 @@ $subjectsQuery->execute(['user_id' => $userId]);
 $subjects = $subjectsQuery->fetchAll(PDO::FETCH_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $postAction = (string) ($_POST['post_action'] ?? 'publish');
     $title = trim((string) ($_POST['title'] ?? ''));
     $categoryId = (int) ($_POST['category_id'] ?? 0);
     $subjectId = (int) ($_POST['subject_id'] ?? 0);
@@ -42,10 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         html_entity_decode(strip_tags($message), ENT_QUOTES | ENT_HTML5, 'UTF-8')
     ) ?? '';
 
-    if (!csrf_is_valid()) {
+    if (!in_array($postAction, ['draft', 'publish'], true)) {
+        $error = 'Odabrana akcija nije valjana.';
+    } elseif (!csrf_is_valid()) {
         $error = 'Neispravan sigurnosni token. Pokušajte ponovno.';
-    } elseif ($title === '' || strlen($title) > 255 || $plainMessage === '') {
+    } elseif ($postAction === 'publish' && ($title === '' || $plainMessage === '')) {
         $error = 'Naslov i tekst objave su obavezni.';
+    } elseif (strlen($title) > 255) {
+        $error = 'Naslov može imati najviše 255 znakova.';
     } else {
         $categoryQuery = db()->prepare('SELECT name FROM categories WHERE id = :id');
         $categoryQuery->execute(['id' => $categoryId]);
@@ -56,7 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($categoryName === 'Opće vijesti') {
             $subjectId = 0;
         } elseif ($subjectId < 1) {
-            $error = 'Za odabranu kategoriju morate odabrati predmet.';
+            if ($postAction === 'publish') {
+                $error = 'Za odabranu kategoriju morate odabrati predmet.';
+            }
         } else {
             $validSubject = db()->prepare(
                 'SELECT s.id FROM subjects s '
@@ -113,8 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $insert = db()->prepare(
                 'INSERT INTO notifications '
-                . '(subject_id, professor_id, category_id, title, message, image) '
-                . 'VALUES (:subject_id, :professor_id, :category_id, :title, :message, :image)'
+                . '(subject_id, professor_id, category_id, title, message, image, is_draft) '
+                . 'VALUES (:subject_id, :professor_id, :category_id, :title, :message, :image, :is_draft)'
             );
             $insert->execute([
                 'subject_id' => $subjectId > 0 ? $subjectId : null,
@@ -123,8 +130,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'title' => $title,
                 'message' => $message,
                 'image' => $imagePath,
+                'is_draft' => $postAction === 'draft' ? 1 : 0,
             ]);
-            redirect('create_post.php?created=1');
+            if ($postAction === 'draft') {
+                $_SESSION['notification_notice'] = 'Obavijest je spremljena kao nacrt.';
+            } else {
+                $delivery = send_notification_emails([
+                    'subject_id' => $subjectId > 0 ? $subjectId : null,
+                    'professor_id' => $userId,
+                    'title' => $title,
+                    'message' => $message,
+                ]);
+                $_SESSION['notification_notice_type'] = in_array($delivery['status'], ['sent', 'no_recipients'], true)
+                    ? 'success'
+                    : 'error';
+                $_SESSION['notification_notice'] = match ($delivery['status']) {
+                    'sent' => 'Obavijest je objavljena i poslana na e-mail '
+                        . $delivery['count'] . ' studenata.',
+                    'no_recipients' => 'Obavijest je objavljena; nema aktivnih studenata za obavijest.',
+                    'not_configured' => 'Obavijest je objavljena, ali EmailJS nije konfiguriran.',
+                    default => 'Obavijest je objavljena, ali slanje e-maila nije uspjelo: '
+                        . ($delivery['reason'] ?? $delivery['status']),
+                };
+            }
+            redirect('notifications.php');
         } catch (PDOException $exception) {
             if ($imagePath !== null && is_file(__DIR__ . '/' . $imagePath)) {
                 unlink(__DIR__ . '/' . $imagePath);

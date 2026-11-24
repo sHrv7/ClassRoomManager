@@ -17,7 +17,7 @@ if (!$notificationId || $notificationId < 1) {
 }
 
 $findNotification = db()->prepare(
-    'SELECT id, subject_id, professor_id, category_id, title, message, image '
+    'SELECT id, subject_id, professor_id, category_id, title, message, image, is_draft '
     . 'FROM notifications WHERE id = :id LIMIT 1'
 );
 $findNotification->execute(['id' => $notificationId]);
@@ -87,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delete') {
+    $postAction = (string) ($_POST['post_action'] ?? 'publish');
     $title = trim($title);
     $categoryId = (int) ($_POST['category_id'] ?? 0);
     $subjectId = (int) ($_POST['subject_id'] ?? 0);
@@ -97,10 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
         html_entity_decode(strip_tags($message), ENT_QUOTES | ENT_HTML5, 'UTF-8')
     ) ?? '';
 
-    if (!csrf_is_valid()) {
+    if (!in_array($postAction, ['draft', 'publish'], true)) {
+        $error = 'Odabrana akcija nije valjana.';
+    } elseif (!csrf_is_valid()) {
         $error = 'Neispravan sigurnosni token. Osvježite stranicu i pokušajte ponovno.';
-    } elseif ($title === '' || strlen($title) > 255 || $plainMessage === '') {
+    } elseif ($postAction === 'publish' && ($title === '' || $plainMessage === '')) {
         $error = 'Naslov i tekst obavijesti su obavezni.';
+    } elseif (strlen($title) > 255) {
+        $error = 'Naslov može imati najviše 255 znakova.';
     } else {
         $categoryQuery = db()->prepare('SELECT name FROM categories WHERE id = :id');
         $categoryQuery->execute(['id' => $categoryId]);
@@ -111,7 +116,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
         } elseif ($categoryName === 'Opće vijesti') {
             $subjectId = 0;
         } elseif ($subjectId < 1) {
-            $error = 'Za odabranu kategoriju morate odabrati predmet.';
+            if ($postAction === 'publish') {
+                $error = 'Za odabranu kategoriju morate odabrati predmet.';
+            }
         } else {
             $validSubject = db()->prepare(
                 'SELECT s.id FROM subjects s '
@@ -168,11 +175,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
     if ($error === '') {
         $imagePath = $newImagePath
             ?? (!empty($_POST['remove_image']) ? null : $notification['image']);
+        $previousMessageText = preg_replace(
+            '/\s+/u',
+            ' ',
+            html_entity_decode(strip_tags((string) $notification['message']), ENT_QUOTES | ENT_HTML5, 'UTF-8')
+        ) ?? '';
+        $updatedMessageText = preg_replace(
+            '/\s+/u',
+            ' ',
+            html_entity_decode(strip_tags($message), ENT_QUOTES | ENT_HTML5, 'UTF-8')
+        ) ?? '';
+        $hasContentChanges = $title !== $notification['title']
+            || $categoryId !== (int) $notification['category_id']
+            || $subjectId !== (int) ($notification['subject_id'] ?? 0)
+            || trim($updatedMessageText) !== trim($previousMessageText)
+            || $imagePath !== ($notification['image'] ?? null);
+        $shouldSendEmail = $postAction === 'publish'
+            && ((int) $notification['is_draft'] === 1 || $hasContentChanges);
 
         try {
             $updateNotification = db()->prepare(
                 'UPDATE notifications SET subject_id = :subject_id, category_id = :category_id, '
-                . 'title = :title, message = :message, image = :image WHERE id = :id'
+                . 'title = :title, message = :message, image = :image, is_draft = :is_draft WHERE id = :id'
             );
             $updateNotification->execute([
                 'subject_id' => $subjectId > 0 ? $subjectId : null,
@@ -180,6 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
                 'title' => $title,
                 'message' => $message,
                 'image' => $imagePath,
+                'is_draft' => $postAction === 'draft' ? 1 : 0,
                 'id' => $notificationId,
             ]);
 
@@ -193,7 +218,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
                 }
             }
 
-            $_SESSION['notification_notice'] = 'Obavijest je uspješno ažurirana.';
+            if ($postAction === 'draft') {
+                $_SESSION['notification_notice'] = 'Izmjene su spremljene kao nacrt.';
+            } elseif ($shouldSendEmail) {
+                $delivery = send_notification_emails([
+                    'subject_id' => $subjectId > 0 ? $subjectId : null,
+                    'professor_id' => (int) $notification['professor_id'],
+                    'title' => $title,
+                    'message' => $message,
+                ]);
+                $_SESSION['notification_notice_type'] = in_array($delivery['status'], ['sent', 'no_recipients'], true)
+                    ? 'success'
+                    : 'error';
+                $_SESSION['notification_notice'] = match ($delivery['status']) {
+                    'sent' => 'Obavijest je objavljena i poslana na e-mail '
+                        . $delivery['count'] . ' studenata.',
+                    'no_recipients' => 'Obavijest je objavljena; nema aktivnih studenata za obavijest.',
+                    'not_configured' => 'Obavijest je objavljena, ali EmailJS nije konfiguriran.',
+                    default => 'Obavijest je objavljena, ali slanje e-maila nije uspjelo: '
+                        . ($delivery['reason'] ?? $delivery['status']),
+                };
+            } else {
+                $_SESSION['notification_notice'] = 'Nije bilo promjena; e-mail nije poslan.';
+            }
             redirect('notifications.php');
         } catch (PDOException $exception) {
             if ($newImagePath !== null && is_file(__DIR__ . '/' . $newImagePath)) {
@@ -210,7 +257,7 @@ $pageTitle = 'Uredi obavijest';
 require __DIR__ . '/header.php';
 $formHeading = 'Uredi obavijest';
 $formAction = 'edit_post.php?id=' . (int) $notificationId;
-$formSubmitLabel = 'Spremi promjene';
+$formSubmitLabel = (int) $notification['is_draft'] === 1 ? 'Objavi' : 'Spremi promjene';
 $formError = $error;
 $formTitle = $title;
 $formMessage = $message;

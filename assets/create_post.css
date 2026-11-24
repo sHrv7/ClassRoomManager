@@ -52,6 +52,13 @@
     margin-top: 16px;
 }
 
+.post-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
 .post-delete-form {
     margin-top: 14px;
 }
