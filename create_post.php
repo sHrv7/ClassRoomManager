@@ -31,6 +31,59 @@ $subjectsQuery = db()->prepare(
 $subjectsQuery->execute(['user_id' => $userId]);
 $subjects = $subjectsQuery->fetchAll(PDO::FETCH_ASSOC);
 
+
+function create_notification_api_request(array $payload): array
+{
+    $apiUrl = 'http://' . $_SERVER['HTTP_HOST']
+        . '/ClassRoomManager/api/v1/notifications';
+
+    $sessionCookie = session_name() . '=' . session_id();
+
+    session_write_close();
+
+    try {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' =>
+                    "Content-Type: application/json\r\n" .
+                    "Accept: application/json\r\n" .
+                    "Cookie: " . $sessionCookie . "\r\n",
+                'content' => json_encode(
+                    $payload,
+                    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                ),
+                'timeout' => 10,
+                'ignore_errors' => true
+            ]
+        ]);
+
+        $response = @file_get_contents($apiUrl, false, $context);
+
+        if ($response === false) {
+            throw new RuntimeException('API connection failed.');
+        }
+
+        $result = json_decode($response, true);
+        $statusLine = $http_response_header[0] ?? '';
+
+        if (
+            !is_array($result)
+            || !($result['success'] ?? false)
+            || strpos($statusLine, '201') === false
+        ) {
+            throw new RuntimeException(
+                $result['error']['message'] ?? 'API request failed.'
+            );
+        }
+
+        return $result;
+    } finally {
+        session_start();
+    }
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postAction = (string) ($_POST['post_action'] ?? 'publish');
     $title = trim((string) ($_POST['title'] ?? ''));
@@ -118,20 +171,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($error === '') {
         try {
-            $insert = db()->prepare(
-                'INSERT INTO notifications '
-                . '(subject_id, professor_id, category_id, title, message, image, is_draft) '
-                . 'VALUES (:subject_id, :professor_id, :category_id, :title, :message, :image, :is_draft)'
-            );
-            $insert->execute([
-                'subject_id' => $subjectId > 0 ? $subjectId : null,
-                'professor_id' => $userId,
-                'category_id' => $categoryId,
+            
+            $apiResult = create_notification_api_request([
                 'title' => $title,
                 'message' => $message,
+                'category_id' => $categoryId,
+                'subject_id' => $subjectId > 0 ? $subjectId : null,
                 'image' => $imagePath,
-                'is_draft' => $postAction === 'draft' ? 1 : 0,
+                'is_draft' => $postAction === 'draft',
             ]);
+
             if ($postAction === 'draft') {
                 $_SESSION['notification_notice'] = 'Obavijest je spremljena kao nacrt.';
             } else {

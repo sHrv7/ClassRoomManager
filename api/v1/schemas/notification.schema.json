@@ -1,0 +1,60 @@
+
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Create Notification",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "title",
+        "message",
+        "category_id"
+    ],
+    "properties": {
+        "title": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "message": {
+            "type": "string"
+        },
+        "category_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "subject_id": {
+            "type": ["integer", "null"],
+            "minimum": 1
+        },
+        "image": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "is_draft": {
+            "type": "boolean"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "is_draft": {
+                        "const": true
+                    }
+                },
+                "required": ["is_draft"]
+            },
+            "then": {},
+            "else": {
+                "properties": {
+                    "title": {
+                        "minLength": 1
+                    },
+                    "message": {
+                        "minLength": 1
+                    }
+                }
+            }
+        }
+    ]
+}

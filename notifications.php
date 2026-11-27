@@ -14,145 +14,146 @@ $noticeType = (string) ($_SESSION['notification_notice_type'] ?? 'success');
 unset($_SESSION['notification_notice']);
 unset($_SESSION['notification_notice_type']);
 
+session_write_close();
+
 if (!$userId) {
     exit('User ID not found.');
 }
 
 // Get notifications for subjects the logged-in student is enrolled in
-$stmt = db()->prepare("
-    SELECT DISTINCT
-        n.id,
-        n.subject_id,
-        n.professor_id,
-        n.title,
-        n.message,
-        n.created_at,
-        n.image,
-        n.category_id,
-        n.is_draft,
-        c.name AS category_name,
-        s.name AS subject_name,
-        u.username AS professor_name
-    FROM notifications n
-    JOIN users u ON u.id = n.professor_id
-    LEFT JOIN categories c ON c.id = n.category_id
-    LEFT JOIN subjects s ON s.id = n.subject_id
-    LEFT JOIN user_subjects us
-        ON us.subject_id = n.subject_id
-        AND us.user_id = :user_id
-    WHERE (
-        n.subject_id IS NULL
-        OR us.user_id IS NOT NULL
-        OR :is_admin = 1
-        OR n.professor_id = :author_id
-    )
-    AND (
-        n.is_draft = 0
-        OR :is_admin_draft = 1
-        OR n.professor_id = :draft_author_id
-    )
-    ORDER BY n.created_at DESC
-");
 
-$stmt->execute([
-    'user_id' => $userId,
-    'is_admin' => $isAdmin ? 1 : 0,
-    'author_id' => $userId,
-    'is_admin_draft' => $isAdmin ? 1 : 0,
-    'draft_author_id' => $userId,
-]);
-
-$allNotifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+// Read filters from the URL
 $selectedCategory = (int)($_GET['category'] ?? 0);
 $selectedSubject = (int)($_GET['subject'] ?? 0);
 $searchTerm = trim($_GET['search'] ?? '');
 
-// Get available categories and subjects from visible notifications
-$categories = [];
-$subjects = [];
-
-foreach ($allNotifications as $notification) {
-    if (!empty($notification['category_id'])) {
-        $categories[$notification['category_id']] =
-            $notification['category_name'];
-    }
-
-    if (!empty($notification['subject_id'])) {
-        $subjects[$notification['subject_id']] =
-            $notification['subject_name'];
-    }
-}
-
-$isGeneralNewsCategory = (
-    isset($categories[$selectedCategory]) &&
-    $categories[$selectedCategory] === 'Opće vijesti'
-);
-
-if ($isGeneralNewsCategory) {
-    $selectedSubject = 0;
-}
-
-// Apply filters and search
-$notifications = array_filter(
-    $allNotifications,
-    function ($notification) use (
-        $selectedCategory,
-        $selectedSubject,
-        $searchTerm
-    ) {
-
-        // Category filter
-        if (
-            $selectedCategory > 0 &&
-            (int)$notification['category_id'] !== $selectedCategory
-        ) {
-            return false;
-        }
-
-        // Subject filter
-        if (
-            $selectedSubject > 0 &&
-            (int)$notification['subject_id'] !== $selectedSubject
-        ) {
-            return false;
-        }
-
-        // Search title and message
-        if ($searchTerm !== '') {
-            $searchTitle = stripos(
-                $notification['title'],
-                $searchTerm
-            ) !== false;
-
-            $searchMessage = stripos(
-                $notification['message'],
-                $searchTerm
-            ) !== false;
-
-            if (!$searchTitle && !$searchMessage) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-);
-
-$notifications = array_values($notifications);
-
-// Pagination
-$totalNotifications = count($notifications);
 $perPage = 8;
-
-$totalPages = max(1, (int)ceil($totalNotifications / $perPage));
-
 $currentPage = max(1, (int)($_GET['page'] ?? 1));
-$currentPage = min($currentPage, $totalPages);
 
-$offset = ($currentPage - 1) * $perPage;
+// Build API URL
+$apiBase = 'http://' . $_SERVER['HTTP_HOST'] . '/ClassRoomManager/api/v1/';
 
-$notifications = array_slice($notifications, $offset, $perPage);
+
+function notification_api_get(string $url): array
+{
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'header' =>
+                "Accept: application/json\r\n" .
+                "Cookie: " . session_name() . "=" . session_id() . "\r\n",
+            'timeout' => 10,
+            'ignore_errors' => true
+        ]
+    ]);
+
+    $response = file_get_contents($url, false, $context);
+
+    if ($response === false) {
+        throw new RuntimeException('API connection failed.');
+    }
+
+    $result = json_decode($response, true);
+
+    if (!is_array($result) || !($result['success'] ?? false)) {
+        throw new RuntimeException('Could not load data from the API.');
+    }
+
+    return $result;
+}
+
+
+try {
+    // Get categories from the API
+    $categoryResponse = notification_api_get(
+        $apiBase . 'categories'
+    );
+
+    $categories = [];
+
+    foreach ($categoryResponse['data'] as $category) {
+        $categories[(int)$category['id']] = $category['name'];
+    }
+
+    // Get subjects for the current user
+    if ($isAdmin) {
+        $subjectStmt = db()->query(
+            'SELECT id, name FROM subjects ORDER BY name ASC'
+        );
+    } else {
+        $subjectStmt = db()->prepare(
+            'SELECT DISTINCT s.id, s.name
+             FROM subjects s
+             JOIN user_subjects us ON us.subject_id = s.id
+             WHERE us.user_id = :user_id
+             ORDER BY s.name ASC'
+        );
+
+        $subjectStmt->execute(['user_id' => $userId]);
+    }
+
+    $subjects = [];
+
+    foreach ($subjectStmt->fetchAll(PDO::FETCH_ASSOC) as $subject) {
+        $subjects[(int)$subject['id']] = $subject['name'];
+    }
+
+    // Detect general news category
+    $isGeneralNewsCategory = (
+        isset($categories[$selectedCategory]) &&
+        $categories[$selectedCategory] === 'Opće vijesti'
+    );
+
+    if ($isGeneralNewsCategory) {
+        $selectedSubject = 0;
+    }
+
+    // Build API query parameters
+    $apiParams = [
+        'page' => $currentPage,
+        'limit' => $perPage
+    ];
+
+    if ($selectedCategory > 0) {
+        $apiParams['category_id'] = $selectedCategory;
+    }
+
+    if ($selectedSubject > 0) {
+        $apiParams['subject_id'] = $selectedSubject;
+    }
+
+    if ($searchTerm !== '') {
+        $apiParams['search'] = $searchTerm;
+    }
+
+    $notificationsUrl = $apiBase . 'notifications?' .
+        http_build_query($apiParams);
+
+    // Get notifications through the API
+    $notificationResponse = notification_api_get(
+        $notificationsUrl
+    );
+
+    $notifications = $notificationResponse['data'];
+
+    // Read pagination information from the API
+    $pagination = $notificationResponse['pagination'];
+
+    $totalNotifications = (int)$pagination['total'];
+    $totalPages = max(1, (int)$pagination['total_pages']);
+    $currentPage = (int)$pagination['page'];
+
+} catch (Throwable $exception) {
+    error_log($exception->getMessage());
+
+    $notifications = [];
+    $totalNotifications = 0;
+    $totalPages = 1;
+    $currentPage = 1;
+
+    $notice = 'Obavijesti trenutno nije moguće učitati.';
+    $noticeType = 'error';
+}
 
 $pageTitle = 'Obavijesti';
 

@@ -42,6 +42,60 @@ $subjectsQuery = db()->prepare(
 $subjectsQuery->execute(['user_id' => $notification['professor_id']]);
 $subjects = $subjectsQuery->fetchAll(PDO::FETCH_ASSOC);
 
+
+function edit_notification_api_request(int $notificationId, array $payload): array
+{
+    $apiUrl = 'http://' . $_SERVER['HTTP_HOST']
+        . '/ClassRoomManager/api/v1/notifications/'
+        . $notificationId;
+
+    $sessionCookie = session_name() . '=' . session_id();
+
+    session_write_close();
+
+    try {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'PATCH',
+                'header' =>
+                    "Content-Type: application/json\r\n" .
+                    "Accept: application/json\r\n" .
+                    "Cookie: " . $sessionCookie . "\r\n",
+                'content' => json_encode(
+                    $payload,
+                    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                ),
+                'timeout' => 10,
+                'ignore_errors' => true
+            ]
+        ]);
+
+        $response = @file_get_contents($apiUrl, false, $context);
+
+        if ($response === false) {
+            throw new RuntimeException('API connection failed.');
+        }
+
+        $result = json_decode($response, true);
+        $statusLine = $http_response_header[0] ?? '';
+
+        if (
+            !is_array($result)
+            || !($result['success'] ?? false)
+            || strpos($statusLine, '200') === false
+        ) {
+            throw new RuntimeException(
+                $result['error']['message'] ?? 'API update failed.'
+            );
+        }
+
+        return $result;
+    } finally {
+        session_start();
+    }
+}
+
+
 $title = (string) ($_POST['title'] ?? $notification['title']);
 $message = (string) ($_POST['message'] ?? $notification['message']);
 $categoryId = (int) ($_POST['category_id'] ?? $notification['category_id']);
@@ -194,19 +248,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
             && ((int) $notification['is_draft'] === 1 || $hasContentChanges);
 
         try {
-            $updateNotification = db()->prepare(
-                'UPDATE notifications SET subject_id = :subject_id, category_id = :category_id, '
-                . 'title = :title, message = :message, image = :image, is_draft = :is_draft WHERE id = :id'
-            );
-            $updateNotification->execute([
+            
+            $apiResult = edit_notification_api_request($notificationId, [
                 'subject_id' => $subjectId > 0 ? $subjectId : null,
                 'category_id' => $categoryId,
                 'title' => $title,
                 'message' => $message,
                 'image' => $imagePath,
-                'is_draft' => $postAction === 'draft' ? 1 : 0,
-                'id' => $notificationId,
+                'is_draft' => $postAction === 'draft',
             ]);
+
 
             $oldImage = $notification['image'];
             if ($oldImage && $oldImage !== $imagePath
@@ -242,7 +293,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
                 $_SESSION['notification_notice'] = 'Nije bilo promjena; e-mail nije poslan.';
             }
             redirect('notifications.php');
-        } catch (PDOException $exception) {
+        } catch (Throwable $exception) {
+            error_log('Notification API PATCH error: ' . $exception->getMessage());
             if ($newImagePath !== null && is_file(__DIR__ . '/' . $newImagePath)) {
                 unlink(__DIR__ . '/' . $newImagePath);
             }

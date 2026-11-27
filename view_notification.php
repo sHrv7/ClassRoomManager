@@ -13,56 +13,65 @@ if (!$userId) {
     exit('User ID not found.');
 }
 
+
 $notificationId = (int)($_GET['id'] ?? 0);
 
-$stmt = db()->prepare("
-    SELECT
-        n.id,
-        n.subject_id,
-        n.professor_id,
-        n.title,
-        n.message,
-        n.created_at,
-        n.image,
-        n.is_draft,
-        c.name AS category_name,
-        u.username AS professor_name
-    FROM notifications n
-    JOIN users u ON u.id = n.professor_id
-    LEFT JOIN categories c ON c.id = n.category_id
-    LEFT JOIN user_subjects us
-        ON us.subject_id = n.subject_id
-        AND us.user_id = :user_id
-    WHERE n.id = :notification_id
-      AND (
-          n.subject_id IS NULL
-          OR us.user_id IS NOT NULL
-          OR :is_admin = 1
-          OR n.professor_id = :author_id
-      )
-      AND (
-          n.is_draft = 0
-          OR :is_admin_draft = 1
-          OR n.professor_id = :draft_author_id
-      )
-    LIMIT 1
-");
+if ($notificationId <= 0) {
+    http_response_code(400);
+    exit('Neispravan ID obavijesti.');
+}
 
-$stmt->execute([
-    'user_id' => $userId,
-    'notification_id' => $notificationId,
-    'is_admin' => $isAdmin ? 1 : 0,
-    'author_id' => $userId,
-    'is_admin_draft' => $isAdmin ? 1 : 0,
-    'draft_author_id' => $userId,
+// Release the session lock before making the API request.
+session_write_close();
+
+// API URL
+$apiUrl = 'http://' . $_SERVER['HTTP_HOST']
+    . '/ClassRoomManager/api/v1/notifications/'
+    . $notificationId;
+
+// Send GET request to the API
+$context = stream_context_create([
+    'http' => [
+        'method' => 'GET',
+        'header' =>
+            "Accept: application/json\r\n" .
+            "Cookie: " . session_name() . "=" . session_id() . "\r\n",
+        'timeout' => 10,
+        'ignore_errors' => true
+    ]
 ]);
 
-$notification = $stmt->fetch(PDO::FETCH_ASSOC);
+$response = @file_get_contents($apiUrl, false, $context);
 
-if (!$notification) {
-    http_response_code(404);
-    exit('Obavijest nije pronađena ili nemate pristup.');
+if ($response === false) {
+    error_log('Notification API connection failed: ' . print_r(error_get_last(), true));
+    http_response_code(500);
+    exit('Obavijest trenutno nije moguće učitati.');
 }
+
+$result = json_decode($response, true);
+
+if (!is_array($result) || !($result['success'] ?? false)) {
+    $statusLine = $http_response_header[0] ?? '';
+
+    if (str_contains($statusLine, '404')) {
+        http_response_code(404);
+        exit('Obavijest nije pronađena ili nemate pristup.');
+    }
+
+    error_log('Notification API error: ' . $response);
+    http_response_code(500);
+    exit('Došlo je do pogreške prilikom učitavanja obavijesti.');
+}
+
+$notification = $result['data'];
+
+// Ensure all expected notification fields are available.
+if (!is_array($notification)) {
+    http_response_code(500);
+    exit('Neispravan odgovor API-ja.');
+}
+
 
 $pageTitle = 'Obavijest';
 
