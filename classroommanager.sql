@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Nov 24, 2026 at 07:09 PM
+-- Host: 127.0.0.1:3307
+-- Generation Time: Nov 28, 2026 at 12:00 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -99,7 +99,6 @@ INSERT INTO `notifications` (`id`, `subject_id`, `professor_id`, `title`, `messa
 (32, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici B202 na datum 24.11.2026 12:00 je otkazano.', '2026-11-20 14:05:04', NULL, 2, 0),
 (33, NULL, 4, 'Dodan je Rich Text editor', '<h1>Ovo je heading 1</h1><p><strong>Ovo bold</strong></p><h2>Ovo je heading 2</h2><p><em>Ovo italic</em></p><p><u>Ovo underline</u></p><p><s>Ovo je line kroz</s></p><p><br></p><p>Lista:</p><ol><li>lista 1</li><li>lista 2</li><li>lista 3</li></ol><p><br></p><p>Bulletsi:</p><ul><li>bullet 1</li><li>bullet 2</li><li>bullet 3</li></ul><p><br></p><blockquote>ovo je quote</blockquote><p><br></p><p><a href=\"https://github.com/sHrv7/ClassRoomManager\">ovo je veza</a></p><p><br></p><blockquote><strong><em><s><u>ovo je sve</u></s></em></strong></blockquote><p><br></p><p>a ovo normal text</p>', '2026-11-20 14:18:43', NULL, 1, 0),
 (35, NULL, 3, 'Proba', '<p>Proba</p>', '2026-11-20 18:20:17', NULL, 1, 0),
-(36, NULL, 3, 'Probna vijest', '<p>Ovo je probna vijest</p>', '2026-11-21 00:09:59', 'uploads/announcements/c2a4329f17e373a23c73d51d49a59bd6.jpg', 1, 0),
 (37, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: A101, početak: 26.11.2026 15:55.\nNapomene: Predavanje', '2026-11-24 14:55:53', NULL, 2, 0),
 (38, 5, 1, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Predmet: Linux Basics\n- Učionica: A101\n- Početak: 26.11.2026 15:55 → 27.11.2026 15:55\n- Završetak: 26.11.2026 17:55 → 27.11.2026 17:55\n- Napomene: Predavanje → Predavanje 2', '2026-11-24 14:56:52', NULL, 2, 0),
 (39, 5, 1, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 27.11.2026 15:55 je otkazano.', '2026-11-24 14:58:54', NULL, 2, 0),
@@ -120,7 +119,10 @@ INSERT INTO `notifications` (`id`, `subject_id`, `professor_id`, `title`, `messa
 (57, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 27.11.2026 15:35 je otkazano.', '2026-11-24 18:01:20', NULL, 2, 0),
 (58, 5, 4, 'Nova rezervacija', 'Kreirana je nova rezervacija za predmet \"Linux Basics\", učionica: A101, početak: 26.11.2026 15:00.\nOčekivani broj studenata: 35.\nNapomene: Kolokvij', '2026-11-24 18:02:13', NULL, 2, 0),
 (59, 5, 4, 'Promjena rezervacije', 'Došlo je do promjena u rezervaciji:\n- Očekivani broj studenata: 35 → 50', '2026-11-24 18:03:06', NULL, 2, 0),
-(60, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 26.11.2026 15:00 je otkazano.', '2026-11-24 18:03:20', NULL, 2, 0);
+(60, 5, 4, 'Predavanje otkazano', 'Predavanje iz predmeta Linux Basics u učionici A101 na datum 26.11.2026 15:00 je otkazano.', '2026-11-24 18:03:20', NULL, 2, 0),
+(61, 3, 3, 'API test announcement', 'This notification was created using my REST API.', '2026-11-27 21:18:53', NULL, 2, 0),
+(62, NULL, 3, 'New announcement', 'The classroom schedule has been updated.', '2026-11-27 21:54:45', NULL, 2, 0),
+(64, 4, 3, 'proba apijjja', '<p>ovo je proba za api posta</p>', '2026-11-27 22:41:22', 'uploads/announcements/8bd6db195e3218a6584e02db951365c3.jpg', 3, 0);
 
 -- --------------------------------------------------------
 
@@ -301,7 +303,7 @@ ALTER TABLE `classrooms`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT for table `reservations`
