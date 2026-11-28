@@ -96,6 +96,48 @@ function edit_notification_api_request(int $notificationId, array $payload): arr
 }
 
 
+function delete_notification_api_request(int $notificationId): void
+{
+    $apiUrl = 'http://' . $_SERVER['HTTP_HOST']
+        . '/ClassRoomManager/api/v1/notifications/'
+        . $notificationId;
+
+    $sessionCookie = session_name() . '=' . session_id();
+
+    session_write_close();
+
+    try {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'DELETE',
+                'header' =>
+                    "Accept: application/json\r\n" .
+                    "Cookie: " . $sessionCookie . "\r\n",
+                'timeout' => 10,
+                'ignore_errors' => true
+            ]
+        ]);
+
+        $response = @file_get_contents($apiUrl, false, $context);
+        $statusLine = $http_response_header[0] ?? '';
+
+        // DELETE API should return HTTP 204 with an empty response body.
+        if (
+            $response === false
+            || strpos($statusLine, '204') === false
+        ) {
+            $result = json_decode($response ?: '', true);
+
+            throw new RuntimeException(
+                $result['error']['message'] ?? 'API delete failed.'
+            );
+        }
+    } finally {
+        session_start();
+    }
+}
+
+
 $title = (string) ($_POST['title'] ?? $notification['title']);
 $message = (string) ($_POST['message'] ?? $notification['message']);
 $categoryId = (int) ($_POST['category_id'] ?? $notification['category_id']);
@@ -106,21 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     if (!csrf_is_valid()) {
         $error = 'Neispravan sigurnosni token. Osvježite stranicu i pokušajte ponovno.';
     } else {
-        $deleteSql = $isAdmin
-            ? 'DELETE FROM notifications WHERE id = :id'
-            : 'DELETE FROM notifications WHERE id = :id AND professor_id = :professor_id';
-        $deleteNotification = db()->prepare($deleteSql);
-        $deleteParameters = ['id' => $notificationId];
-        if (!$isAdmin) {
-            $deleteParameters['professor_id'] = $userId;
-        }
-
         try {
-            $deleteNotification->execute($deleteParameters);
-            if ($deleteNotification->rowCount() !== 1) {
-                http_response_code(404);
-                exit('Obavijest nije pronađena.');
-            }
+            delete_notification_api_request($notificationId);
 
             $imagePath = (string) ($notification['image'] ?? '');
             if ($imagePath !== ''
@@ -134,7 +163,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
 
             $_SESSION['notification_notice'] = 'Obavijest je obrisana.';
             redirect('notifications.php');
-        } catch (PDOException $exception) {
+        } catch (Throwable $exception) {
+            error_log('Notification API DELETE error: ' . $exception->getMessage());
             $error = 'Obavijest nije obrisana. Pokušajte ponovno.';
         }
     }
