@@ -8,108 +8,108 @@ permalink: /ntpws/
 
 ## 1. Cilj projekta
 
-Tijekom semestra potrebno je razviti funkcionalnu web-aplikaciju koja povezuje korisničko sučelje, poslužiteljsku logiku u PHP-u, relacijsku bazu podataka i web-servise.
+✅Tijekom semestra potrebno je razviti funkcionalnu web-aplikaciju koja povezuje korisničko sučelje, poslužiteljsku logiku u PHP-u, relacijsku bazu podataka i web-servise.
 
-Projekt mora sadržavati:
+✅Projekt mora sadržavati:
 
-- javni dio aplikacije – frontend;
-- backend razvijen u PHP-u;
-- CMS i administracijsko sučelje;
-- upravljanje vijestima i kategorijama;
-- upravljanje korisnicima i njihovim ovlastima;
-- vlastiti API za razmjenu podataka;
-- povezivanje s najmanje jednim vanjskim API-jem;
-- razmjenu podataka u JSON ili XML formatu;
+✅- javni dio aplikacije – frontend;
+✅- backend razvijen u PHP-u;
+✅- CMS i administracijsko sučelje;
+✅- upravljanje vijestima i kategorijama;
+✅- upravljanje korisnicima i njihovim ovlastima;
+✅- vlastiti API za razmjenu podataka;
+✅- povezivanje s najmanje jednim vanjskim API-jem;
+✅- razmjenu podataka u JSON ili XML formatu;
 - dokumentaciju i GitHub repozitorij.
 
-Cilj je pokazati razumijevanje cjelovitog razvoja aplikacije: od organizacije podataka i korisničkih zahtjeva do sigurnosti, povezivanja sa servisima i prezentacije gotovog rješenja.
+✅Cilj je pokazati razumijevanje cjelovitog razvoja aplikacije: od organizacije podataka i korisničkih zahtjeva do sigurnosti, povezivanja sa servisima i prezentacije gotovog rješenja.
 
 ## 2. Odabir teme i organizacija rada
 
-Tema projekta odabire se u dogovoru s nastavnikom. Aplikacija treba rješavati konkretan problem i imati jasno određene korisnike.
+✅Tema projekta odabire se u dogovoru s nastavnikom. Aplikacija treba rješavati konkretan problem i imati jasno određene korisnike.
 
-Primjeri tema su portal s vijestima, sustav za prijavu komunalnih problema, aplikacija za događanja, praćenje javnog prijevoza, rezervacije ili upravljanje nastavnim sadržajem.
+✅Primjeri tema su portal s vijestima, sustav za prijavu komunalnih problema, aplikacija za događanja, praćenje javnog prijevoza, rezervacije ili upravljanje nastavnim sadržajem.
 
-Bez obzira na odabranu temu, aplikacija mora imati modul vijesti ili obavijesti, administraciju korisnika i funkcionalnosti navedene u ovim uputama. Dodatni moduli prilagođavaju se temi projekta.
+✅Bez obzira na odabranu temu, aplikacija mora imati modul vijesti ili obavijesti, administraciju korisnika i funkcionalnosti navedene u ovim uputama. Dodatni moduli prilagođavaju se temi projekta.
 
-Projekt se može izrađivati samostalno ili u paru, s najviše dva studenta u timu. Kod rada u paru potrebno je jasno opisati podjelu zadataka. Svaki student mora razumjeti cjelinu aplikacije i moći objasniti vlastiti doprinos. Seminarski rad svaki student izrađuje samostalno.
+✅Projekt se može izrađivati samostalno ili u paru, s najviše dva studenta u timu. Kod rada u paru potrebno je jasno opisati podjelu zadataka. Svaki student mora razumjeti cjelinu aplikacije i moći objasniti vlastiti doprinos. Seminarski rad svaki student izrađuje samostalno.
 
-Prijedlog projekta treba sadržavati naziv aplikacije, opis problema, ciljane korisnike, planirane funkcionalnosti, tehnologije i odabrani vanjski servis.
+✅Prijedlog projekta treba sadržavati naziv aplikacije, opis problema, ciljane korisnike, planirane funkcionalnosti, tehnologije i odabrani vanjski servis.
 
 ## 3. Frontend – javni dio aplikacije
 
-Javni dio aplikacije mora biti pregledan, funkcionalan i prilagođen računalima i mobilnim uređajima.
+✅Javni dio aplikacije mora biti pregledan, funkcionalan i prilagođen računalima i mobilnim uređajima.
 
-Obavezne stranice i funkcionalnosti:
+✅Obavezne stranice i funkcionalnosti:
 
-- početna stranica s opisom aplikacije i izdvojenim sadržajem;
-- popis objavljenih vijesti;
-- detaljni prikaz pojedine vijesti;
-- filtriranje vijesti prema kategoriji;
-- pretraživanje vijesti prema naslovu ili sadržaju;
-- straničenje rezultata;
+✅- početna stranica s opisom aplikacije i izdvojenim sadržajem;
+✅- popis objavljenih vijesti;
+✅- detaljni prikaz pojedine vijesti;
+✅- filtriranje vijesti prema kategoriji;
+✅- pretraživanje vijesti prema naslovu ili sadržaju;
+✅- straničenje rezultata;
 - stranica s informacijama o projektu;
-- prijava i registracija korisnika;
-- prikaz profila prijavljenog korisnika.
+✅- prijava i registracija korisnika;
+✅- prikaz profila prijavljenog korisnika.
 
-Vijest treba prikazivati naslov, sažetak, sadržaj, kategoriju, autora, datum objave i pripadajuću sliku ako je dodana.
+✅Vijest treba prikazivati naslov, sažetak, sadržaj, kategoriju, autora, datum objave i pripadajuću sliku ako je dodana.
 
-Podaci se moraju dohvaćati iz baze ili preko API-ja. Ručno upisani primjeri u HTML-u ne predstavljaju dovršenu funkcionalnost.
+✅Podaci se moraju dohvaćati iz baze ili preko API-ja. Ručno upisani primjeri u HTML-u ne predstavljaju dovršenu funkcionalnost.
 
-Sučelje treba jasno prikazati uspješno izvršenu radnju, pogrešku, prazne rezultate pretraživanja i nedostupnost servisa. Obrasci trebaju imati razumljive oznake i poruke uz neispravno unesena polja.
+✅Sučelje treba jasno prikazati uspješno izvršenu radnju, pogrešku, prazne rezultate pretraživanja i nedostupnost servisa. Obrasci trebaju imati razumljive oznake i poruke uz neispravno unesena polja.
 
 ## 4. Backend i organizacija PHP koda
 
-Backend upravlja poslovnom logikom, pristupom podacima, korisničkim sesijama i razmjenom podataka sa servisima.
+✅Backend upravlja poslovnom logikom, pristupom podacima, korisničkim sesijama i razmjenom podataka sa servisima.
 
-Potrebno je:
+✅Potrebno je:
 
-- odvojiti konfiguraciju, rad s bazom, poslovnu logiku i prikaz;
-- organizirati kod u smislene datoteke, funkcije i klase;
-- izbjeći nepotrebno ponavljanje istog koda;
+✅- odvojiti konfiguraciju, rad s bazom, poslovnu logiku i prikaz;
+✅- organizirati kod u smislene datoteke, funkcije i klase;
+✅- izbjeći nepotrebno ponavljanje istog koda;
 - provjeravati korisnički unos na poslužitelju;
 - provjeravati ovlasti prije svake zaštićene radnje;
-- obraditi pogreške bez otkrivanja osjetljivih podataka korisniku;
+✅- obraditi pogreške bez otkrivanja osjetljivih podataka korisniku;
 - dokumentirati korištene biblioteke i njihove ovisnosti.
 
 Nije prihvatljivo cijelu aplikaciju smjestiti u jednu PHP datoteku. Moguće je koristiti vlastitu strukturu ili PHP framework uz dogovor s nastavnikom.
 
 ## 5. CMS i administracija vijesti
 
-Administracijsko sučelje mora omogućiti upravljanje sadržajem bez ručnog uređivanja baze podataka ili programskog koda.
+✅Administracijsko sučelje mora omogućiti upravljanje sadržajem bez ručnog uređivanja baze podataka ili programskog koda.
 
-Za vijesti je potrebno omogućiti:
+✅Za vijesti je potrebno omogućiti:
 
-- dodavanje nove vijesti;
-- pregled i pretraživanje postojećih vijesti;
-- uređivanje naslova, sažetka i sadržaja;
-- dodjeljivanje kategorije;
-- unos sadržaja kroz uređivač obogaćenog teksta;
-- prijenos, zamjenu i uklanjanje slike;
-- spremanje nacrta i objavljivanje vijesti;
-- povlačenje vijesti iz javnog prikaza;
-- brisanje uz potvrdu korisnika.
+✅- dodavanje nove vijesti;
+✅- pregled i pretraživanje postojećih vijesti;
+✅- uređivanje naslova, sažetka i sadržaja;
+✅- dodjeljivanje kategorije;
+✅- unos sadržaja kroz uređivač obogaćenog teksta;
+✅- prijenos, zamjenu i uklanjanje slike;
+✅- spremanje nacrta i objavljivanje vijesti;
+✅- povlačenje vijesti iz javnog prikaza;
+✅- brisanje uz potvrdu korisnika.
 
 Sustav treba bilježiti autora, vrijeme izrade i vrijeme posljednje izmjene.
 
-**Neobjavljene vijesti ne smiju biti dostupne posjetiteljima kroz javne stranice ni kroz javni API.**
+✅**Neobjavljene vijesti ne smiju biti dostupne posjetiteljima kroz javne stranice ni kroz javni API.**
 
-Kategorije moraju imati zasebnu administraciju. Potrebno je definirati što se događa s povezanim vijestima prilikom brisanja kategorije, primjerice zabraniti brisanje kategorije dok sadrži vijesti.
+✅Kategorije moraju imati zasebnu administraciju. Potrebno je definirati što se događa s povezanim vijestima prilikom brisanja kategorije, primjerice zabraniti brisanje kategorije dok sadrži vijesti.
 
 ## 6. Korisnici, prijava i ovlasti
 
-Aplikacija treba razlikovati posjetitelja i najmanje tri korisničke uloge:
+✅Aplikacija treba razlikovati posjetitelja i najmanje tri korisničke uloge:
 
-| Uloga | Predviđene ovlasti |
-| --- | --- |
+✅| Uloga | Predviđene ovlasti |
+✅| --- | --- |
 | Posjetitelj | Pregled javno objavljenih sadržaja |
-| Registrirani korisnik | Pregled sadržaja i upravljanje vlastitim profilom |
-| Urednik | Izrada i uređivanje vlastitih vijesti |
-| Administrator | Upravljanje svim vijestima, kategorijama, korisnicima i ulogama |
+✅| Registrirani korisnik | Pregled sadržaja i upravljanje vlastitim profilom |
+✅| Urednik | Izrada i uređivanje vlastitih vijesti |
+✅| Administrator | Upravljanje svim vijestima, kategorijama, korisnicima i ulogama |
 
-Administrator treba imati mogućnost pregleda korisnika, promjene uloge te aktivacije i deaktivacije računa.
+✅Administrator treba imati mogućnost pregleda korisnika, promjene uloge te aktivacije i deaktivacije računa.
 
-Potrebno je implementirati registraciju, prijavu, odjavu i promjenu vlastite lozinke. Registracijom se dodjeljuje osnovna korisnička uloga. Korisnik ne smije sam odabrati administratorske ovlasti.
+✅Potrebno je implementirati registraciju, prijavu, odjavu i promjenu vlastite lozinke. Registracijom se dodjeljuje osnovna korisnička uloga. Korisnik ne smije sam odabrati administratorske ovlasti.
 
 Pri deaktivaciji računa potrebno je onemogućiti daljnji pristup zaštićenim funkcionalnostima, uključujući već otvorene sesije.
 
@@ -117,60 +117,60 @@ Skrivanje gumba ili poveznice u sučelju nije dovoljna zaštita. Backend mora pr
 
 ## 7. Baza podataka
 
-Potrebno je koristiti relacijsku bazu podataka, primjerice MySQL ili PostgreSQL.
+✅Potrebno je koristiti relacijsku bazu podataka, primjerice MySQL ili PostgreSQL.
 
-Baza treba sadržavati podatke o korisnicima, ulogama, vijestima, kategorijama i slikama te dodatne tablice potrebne za odabranu temu.
+✅Baza treba sadržavati podatke o korisnicima, ulogama, vijestima, kategorijama i slikama te dodatne tablice potrebne za odabranu temu.
 
-Obavezno je:
+✅Obavezno je:
 
 - izraditi ER dijagram;
-- definirati primarne i strane ključeve;
-- koristiti prikladne tipove podataka;
-- spriječiti dupliciranje korisničkih računa s istom e-mail adresom;
+✅- definirati primarne i strane ključeve;
+✅- koristiti prikladne tipove podataka;
+✅- spriječiti dupliciranje korisničkih računa s istom e-mail adresom;
 - definirati pravila za brisanje povezanih zapisa;
-- koristiti pripremljene SQL upite i vezanje parametara;
-- pripremiti skriptu ili migracije za izradu baze;
-- osigurati testne podatke za demonstraciju.
+✅- koristiti pripremljene SQL upite i vezanje parametara;
+✅- pripremiti skriptu ili migracije za izradu baze;
+✅- osigurati testne podatke za demonstraciju.
 
 Ako jedna radnja mijenja više povezanih zapisa koji moraju ostati usklađeni, potrebno je primijeniti transakciju.
 
-Testni podaci trebaju omogućiti provjeru svih funkcionalnosti, uključujući više kategorija, različite korisničke uloge te objavljene i neobjavljene vijesti. Ne koristiti stvarne osobne podatke drugih osoba.
+✅Testni podaci trebaju omogućiti provjeru svih funkcionalnosti, uključujući više kategorija, različite korisničke uloge te objavljene i neobjavljene vijesti. Ne koristiti stvarne osobne podatke drugih osoba.
 
 ## 8. Vlastiti API
 
-Aplikacija mora imati vlastiti API koji omogućuje programski pristup podacima i funkcionalnostima.
+✅Aplikacija mora imati vlastiti API koji omogućuje programski pristup podacima i funkcionalnostima.
 
-Za osnovnu izvedbu potrebno je implementirati REST API koji razmjenjuje podatke u **JSON ili XML formatu**. Obavezan je jedan odabrani format. Podrška za oba formata predstavlja nadogradnju.
+✅Za osnovnu izvedbu potrebno je implementirati REST API koji razmjenjuje podatke u **JSON ili XML formatu**. Obavezan je jedan odabrani format. Podrška za oba formata predstavlja nadogradnju.
 
-Primjer minimalnih krajnjih točaka:
+✅Primjer minimalnih krajnjih točaka:
 
-| Metoda | Primjer putanje | Namjena |
-| --- | --- | --- |
-| `GET` | `/api/v1/vijesti` | Dohvat objavljenih vijesti |
-| `GET` | `/api/v1/vijesti/{id}` | Dohvat pojedine objavljene vijesti |
-| `POST` | `/api/v1/vijesti` | Stvaranje vijesti uz odgovarajuće ovlasti |
-| `PATCH` | `/api/v1/vijesti/{id}` | Izmjena vijesti uz odgovarajuće ovlasti |
-| `DELETE` | `/api/v1/vijesti/{id}` | Brisanje vijesti uz odgovarajuće ovlasti |
-| `GET` | `/api/v1/kategorije` | Dohvat kategorija |
+✅| Metoda | Primjer putanje | Namjena |
+✅| --- | --- | --- |
+✅| `GET` | `/api/v1/vijesti` | Dohvat objavljenih vijesti |
+✅| `GET` | `/api/v1/vijesti/{id}` | Dohvat pojedine objavljene vijesti |
+✅| `POST` | `/api/v1/vijesti` | Stvaranje vijesti uz odgovarajuće ovlasti |
+✅| `PATCH` | `/api/v1/vijesti/{id}` | Izmjena vijesti uz odgovarajuće ovlasti |
+✅| `DELETE` | `/api/v1/vijesti/{id}` | Brisanje vijesti uz odgovarajuće ovlasti |
+✅| `GET` | `/api/v1/kategorije` | Dohvat kategorija |
 
-Nazivi putanja mogu se prilagoditi projektu, ali opisane funkcionalnosti moraju biti dostupne.
+✅Nazivi putanja mogu se prilagoditi projektu, ali opisane funkcionalnosti moraju biti dostupne.
 
-API mora:
+✅API mora:
 
-- koristiti odgovarajuće HTTP metode;
+✅- koristiti odgovarajuće HTTP metode;
 - slati ispravno zaglavlje `Content-Type`;
-- provjeravati obavezna polja, tipove i dopuštene vrijednosti;
-- vraćati dosljednu strukturu uspješnih odgovora i pogrešaka;
-- koristiti odgovarajuće HTTP statusne kodove;
-- podržavati straničenje i barem jedan način filtriranja popisa;
-- zahtijevati autentifikaciju i provjeru ovlasti za izmjene;
-- spriječiti dohvat neobjavljenih ili nedopuštenih podataka.
+✅- provjeravati obavezna polja, tipove i dopuštene vrijednosti;
+✅- vraćati dosljednu strukturu uspješnih odgovora i pogrešaka;
+✅- koristiti odgovarajuće HTTP statusne kodove;
+✅- podržavati straničenje i barem jedan način filtriranja popisa;
+✅- zahtijevati autentifikaciju i provjeru ovlasti za izmjene;
+✅- spriječiti dohvat neobjavljenih ili nedopuštenih podataka.
 
-Primjeri statusa koje treba razumjeti i primijeniti prema situaciji su `200`, `201`, `204`, `400`, `401`, `403`, `404` i `500`. Odgovor sa statusom `204` nema tijelo.
+✅Primjeri statusa koje treba razumjeti i primijeniti prema situaciji su `200`, `201`, `204`, `400`, `401`, `403`, `404` i `500`. Odgovor sa statusom `204` nema tijelo.
 
-Za odabrani format potrebno je pripremiti JSON Schemu ili XML Schemu (XSD) za barem jedan zahtjev za unos podataka te demonstrirati provjeru valjanog i nevaljanog primjera.
+✅Za odabrani format potrebno je pripremiti JSON Schemu ili XML Schemu (XSD) za barem jedan zahtjev za unos podataka te demonstrirati provjeru valjanog i nevaljanog primjera.
 
-Najmanje jedan dio vlastite aplikacije mora stvarno koristiti API, primjerice dohvat popisa i detalja vijesti. API ne smije ostati izdvojen primjer koji nije povezan s aplikacijom.
+✅Najmanje jedan dio vlastite aplikacije mora stvarno koristiti API, primjerice dohvat popisa i detalja vijesti. API ne smije ostati izdvojen primjer koji nije povezan s aplikacijom.
 
 ## 9. Povezivanje s vanjskim API-jem
 
@@ -200,12 +200,12 @@ Prije odabira servisa potrebno je provjeriti dokumentaciju, dostupnost i ograni�
 
 ## 10. Sigurnosni zahtjevi
 
-Sigurnost je sastavni dio projekta.
+✅Sigurnost je sastavni dio projekta.
 
-Obavezno je:
+✅Obavezno je:
 
-- lozinke pohranjivati pomoću `password_hash()` i provjeravati pomoću `password_verify()`;
-- koristiti pripremljene SQL upite;
+✅- lozinke pohranjivati pomoću `password_hash()` i provjeravati pomoću `password_verify()`;
+✅- koristiti pripremljene SQL upite;
 - provjeravati podatke na poslužitelju, neovisno o frontend validaciji;
 - prilagoditi izlazne podatke kontekstu prikaza radi zaštite od XSS-a;
 - sanitizirati dopušteni HTML iz uređivača obogaćenog teksta;
